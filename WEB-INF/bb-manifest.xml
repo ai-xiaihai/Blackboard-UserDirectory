@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<manifest>
+  <!-- core extension information -->
+  <plugin>
+    <name value= "OCTET Student Directory"/>
+    <handle value= "octetstudd"/>
+    <description value= "Student Directory Plugin."/>
+    <version value= "1.0.0.1"/>
+    <requires>
+    	<bbversion value="7.0.0"/>
+    </requires>
+    <vendor>
+      <id value="octt"/>
+      <name value="OCTET"/>
+      <url value="http://www.oberlin.edu/octet/" />
+      <description value="Oberlin Center for Technologically Enhanced Teaching." />
+    </vendor>
+    <http-actions>
+      <remove value="admin/remove.jsp"/>
+    </http-actions>
+    
+
+    <!-- Tools defined by this extension -->
+    <application-defs>
+      <application handle="studentdir" type="system" use-ssl="false" name="Profile" can-allow-guest="true"
+       small-icon="" large-icon="">
+        <description lang="en_US">Application installed as part of the OCTET plugin.</description>
+        <links>
+		   <link>
+            <type value="user_tool"/>
+            <name value="Student Directory"/>
+            <url value="links/userDir.jsp"/>
+            <description value="Student Directory with built-in search." />
+            <icons>
+              <listitem value="images/icon.gif"/>
+            </icons>
+          </link>
+          </links>
+      </application>
+   </application-defs>
+    
+    
+    <!-- code permissions required for proper operation -->
+    <permissions>
+      <permission type="persist" name="Content" actions="create,modify,delete"/>
+      <permission type="attribute" name="user.authinfo" actions="get"/>
+	  <permission type="attribute" name="user.personalinfo" actions="get,set" />              
+    </permissions>
+  </plugin>
+
+</manifest>

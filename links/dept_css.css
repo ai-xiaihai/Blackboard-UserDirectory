@@ -1,0 +1,97 @@
+body {
+	margin-left: 0px;
+	margin-top: 0px;
+}
+.largeheader {
+	font-size: 16px;
+	font-weight: bold;
+	color: #720000;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+.maintext {color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px;}
+.a_departmentname {
+	font-size: 11px;
+	color: #999999;
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	text-decoration: none;
+}
+.smalltext {
+	font-size: 10px;
+	font-family: Arial, Helvetica, sans-serif;
+	color: #333333;
+}
+.a_smalltext {
+	color: #333333;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	text-decoration: underline;
+}
+li {
+	list-style-image: url(images/bullet.png);
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	color: #000000;
+	list-style-position: outside;
+	clip: rect(auto,auto,auto,auto);
+}
+.smallheader {font-size: 14px; font-weight: bold; color: #720000; font-family: Verdana, Arial, Helvetica, sans-serif; }
+a {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	color: #720000;
+	text-decoration: underline;
+}
+.a_nav {
+	color: #234170;
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	font-size: 11px;
+	text-decoration: none;
+}
+ol {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	list-style-type: none;
+	margin-left: 0px;
+	padding-left: 15px;
+	padding-top: 0px;
+}
+ul {
+	font-family: Arial, Helvetica, sans-serif;
+	margin-left: 0px;
+	padding-left: 20px;
+}
+.facultyname {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	color: #222222;
+}
+.facultytitle {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	color: #888888;
+}
+.li_nav {
+	line-height: 20px;
+}
+.style6 {
+	font-size: 10px;
+	font-style: italic;	
+}
+.contact {
+		font-family: Verdana, Arial, Helvetica, sans-serif;
+		font-size: 12px;
+		font-weight: bold;
+		color: #FFFFFF;}
+.breadcrumb_my {
+		color: #006699;
+		font-family: Verdana, Arial, Helvetica, sans-serif;
+		font-size: 10px;
+}
+.breadcrumb_nolink {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+}
