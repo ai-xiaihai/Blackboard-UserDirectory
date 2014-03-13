@@ -143,7 +143,7 @@ if((process!=null) && process.equals("1"))
 				//create a database loader for Person objects
 				PersonLoader pL = (PersonLoader)bbPm.getLoader(PersonLoader.TYPE);
 				
-				// new pwerson
+				// new person
 				Person p = new Person();
 				// search by family name
 				p.setFamilyName("%"+search+"%");
@@ -244,10 +244,10 @@ if((process!=null) && process.equals("1"))
                 href="">
 					<table>
 				 	 <tr><td width="50" height="50">
-					 <% if(student.getStreet2().toLowerCase().equals("yes")){
+					 <%// if(student.getStreet2().toLowerCase().equals("yes")){
 					 %>
-						<img src="http://octet1.csr.oberlin.edu/octet/Bb/Photos/expo/<%=student.getUserName()%>/profileImage" name="facPhoto" width="50" height="50" onError="imageError(this)">
-					<% } %>
+						<img src="http://octet1.csr.oberlin.edu/octet/Bb/Photos/expo/<%=student.getUserName()%>/profileImage" name="facPhoto" width="70" onError="imageError(this)">
+					<% //} %>
 					<td><span class="style3">
 							<%=student.getFamilyName()%>, <%=student.getGivenName()%>
 					<br></span>
