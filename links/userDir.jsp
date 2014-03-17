@@ -65,7 +65,7 @@ if(request.getParameter("uid")!=null)
 {
 	uid = request.getParameter("uid"); //get the search string if one exists
 } %>
-<bbUI:titleBar iconUrl="/images/ci/icons/user_u.gif">Student Directory</bbUI:titleBar>
+<bbUI:titleBar 	iconUrl="/images/ci/icons/user_u.gif">Student Directory</bbUI:titleBar>
 <form action="userDir.jsp?mode=normal" method="post" name="searchusers" target="_self" id="searchusers">
 <bbUI:search>
 <span class="style2">
@@ -244,10 +244,8 @@ if((process!=null) && process.equals("1"))
                 href="">
 					<table>
 				 	 <tr><td width="50" height="50">
-					 <%// if(student.getStreet2().toLowerCase().equals("yes")){
-					 %>
+
 						<img src="http://octet1.csr.oberlin.edu/octet/Bb/Photos/expo/<%=student.getUserName()%>/profileImage" name="facPhoto" width="70" onError="imageError(this)">
-					<% //} %>
 					<td><span class="style3">
 							<%=student.getFamilyName()%>, <%=student.getGivenName()%>
 					<br></span>
@@ -255,10 +253,51 @@ if((process!=null) && process.equals("1"))
 					{
 					 	out.print("<a href=\"mailto:" + student.getEmailAddress() + "\">" + student.getEmailAddress() + "</a>");
 					}%><br>
-					<% if(!student.getStreet1().equals(""))
+					<% if(!student.getUserName().equals(""))
 					{
-						out.print("OCMR "+student.getStreet1());
+						out.print(student.getUserName());
 					} %><br>
+					<% if(!student.getJobTitle().equals("")) //OCMR
+					{
+						out.print(student.getJobTitle());
+					} %><br>
+					<% if(!student.getDepartment().equals("")) //major
+					{
+						out.print(student.getDepartment());
+					} %><br>
+					<% if(!student.getStreet1().equals("")) //home address
+					{
+						out.print(student.getStreet1());
+					} %><br>
+					<% if(!student.getCity().equals(""))
+					{
+						out.print(student.getCity()+", ");
+					} %>
+					<% if(!student.getState().equals(""))
+					{
+						out.print(student.getState()+" ");
+					} %>
+					<% if(!student.getZipCode().equals(""))
+					{
+						out.print(student.getZipCode());
+					} %><br>
+<div style="float:left">
+<%
+	List<Course> courses = CourseDbLoader.Default.getInstance().loadByUserId(student.getId()); 
+
+	for (Course currentCourse: courses) {
+		Id id = currentCourse.getId();
+		String courseID = currentCourse.getCourseId();
+
+		String courseName = currentCourse.getTitle();
+
+	
+	
+
+		%>
+		<div><%=courseName%></div>
+		<%} %>
+</div>
 					</td></tr></table>
 </bbUI:listElement></bbUI:list>
 	<%
@@ -268,7 +307,6 @@ if((process!=null) && process.equals("1"))
 <!--
 
 document.searchusers.uid.focus();
-
 //-->
 </script>
 </bbUI:docTemplate>
