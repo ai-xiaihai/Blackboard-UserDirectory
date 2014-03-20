@@ -32,7 +32,7 @@
             <url value="links/userDir.jsp"/>
             <description value="Student Directory with built-in search." />
             <icons>
-              <listitem value="/images/ci/icons/roster_li.gif"/>
+              <listitem value="images/icon.gif"/>
             </icons>
           </link>
           </links>
