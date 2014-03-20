@@ -67,7 +67,6 @@ if(request.getParameter("uid")!=null)
 } %>
 <bbUI:titleBar 	iconUrl="/images/ci/icons/user_u.gif">Student Directory</bbUI:titleBar>
 <form action="userDir.jsp?mode=normal" method="post" name="searchusers" target="_self" id="searchusers">
-<bbUI:search>
 <span class="style2">
 <input name="uid" type="text" size="40" value="<%=uid%>">
 <bbUI:button type="INLINE" name="search" alt="Search" action="SUBMIT_FORM"></bbUI:button>
@@ -92,7 +91,7 @@ roles = request.getParameter("rolesearch");
   <label>
   <input type="radio" name="searchcriteria" value="2" <%if(check.equals("2")){out.println("checked");}%>>
   Username</label><br>
-  <em>Note: These searches are case-sensitive.</em></span></bbUI:search>
+  <em>Note: These searches are case-sensitive.</em></span>
 </form>
 <%
 //process a search
@@ -243,10 +242,11 @@ if((process!=null) && process.equals("1"))
                 label="Student Information"
                 href="">
 					<table>
-				 	 <tr><td width="50" height="50">
+				 	 <tr><td width="70">
 
 						<img src="http://octet1.csr.oberlin.edu/octet/Bb/Photos/expo/<%=student.getUserName()%>/profileImage" name="facPhoto" width="70" onError="imageError(this)">
-					<td><span class="style3">
+					</td>
+					<td width="200"><span class="style3">
 							<%=student.getFamilyName()%>, <%=student.getGivenName()%>
 					<br></span>
 					<% if(!student.getEmailAddress().equals(""))
@@ -280,8 +280,24 @@ if((process!=null) && process.equals("1"))
 					<% if(!student.getZipCode().equals(""))
 					{
 						out.print(student.getZipCode());
+					} %>
+					</td>
+					<td width="200" valign="top">
+					<% if(!student.getHomePhone1().equals(""))
+					{
+						out.print("Home: "+student.getHomePhone1());
 					} %><br>
-<div style="float:left">
+					<% if(!student.getMobilePhone().equals(""))
+					{
+						out.print("Mobile: "+student.getMobilePhone());
+					} %><br>
+					<% if(!student.getBusinessPhone1().equals(""))
+					{
+						out.print("Work: "+student.getBusinessPhone1());
+					} %><br>	
+					
+					</td>
+					<td width="200" valign="top">
 <%
 	List<Course> courses = CourseDbLoader.Default.getInstance().loadByUserId(student.getId()); 
 
@@ -290,14 +306,22 @@ if((process!=null) && process.equals("1"))
 		String courseID = currentCourse.getCourseId();
 
 		String courseName = currentCourse.getTitle();
-
-	
-	
-
+		
+		String numbers = "0123456789";
+		boolean isOrg = true;
+		for(int i=0; i<10; i++){
+			if (courseName.charAt(0)==numbers.charAt(i)){
+				isOrg = false;
+				break;
+			}
+		}
+		if (isOrg){
 		%>
 		<div><%=courseName%></div>
-		<%} %>
-</div>
+	<%		}
+		}%>
+
+
 					</td></tr></table>
 </bbUI:listElement></bbUI:list>
 	<%
