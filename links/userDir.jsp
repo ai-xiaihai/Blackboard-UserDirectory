@@ -204,7 +204,7 @@ if((process!=null) && process.equals("1"))
 		}
 		else if(searchtype.equals("2"))//search by user name
 		{
-			userlist = loader.searchByUserName(request.getParameter("uid"));
+			userlist = loader.searchByUserName(request.getParameter("uid").toLowerCase());
 		}
 		if(userlist.isEmpty() || userlist.size()==0) // if the rezults list is empty
 		{
