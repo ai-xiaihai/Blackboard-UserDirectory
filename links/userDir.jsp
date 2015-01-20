@@ -12,7 +12,7 @@
 				blackboard.persist.course.*,
                 blackboard.platform.*,
                 blackboard.platform.persistence.*"
-        errorPage="/error.jsp"         
+        errorPage="/error.jsp"
 %>
 <SCRIPT LANGUAGE="JavaScript">
 function imageError(theImage)
@@ -21,7 +21,7 @@ theImage.src="http://octet1.csr.oberlin.edu/octet/Bb/Faculty/img/noimage.jpg";
 theImage.onError = null;
 }
 </script>
-<%@ taglib uri="/bbData" prefix="bbData"%>                
+<%@ taglib uri="/bbData" prefix="bbData"%>
 <%@ taglib uri="/bbUI" prefix="bbUI"%>
 <style type="text/css">
 <!--
@@ -53,7 +53,7 @@ theImage.onError = null;
 <bbUI:breadcrumbBar environment="PORTAL">
  <bbUI:breadcrumb>Student Directory</bbUI:breadcrumb>
 </bbUI:breadcrumbBar>
-<% 
+<%
 /* This is the entry point for the student directory.
  * The student directory allows users in blackboard to seatch for students by username or last name.
  * It displays only name, email and a photo. The students have to opt in to have their photo displayed in the directory.
@@ -74,7 +74,7 @@ if(request.getParameter("uid")!=null)
 <br>
 <span class="style1">Search by:
 <label>
-<% 
+<%
 String check = "1"; // stores the seatch  criteria (can be last name (1) or user name (2)
 String roles = "3";
 if(request.getParameter("searchcriteria")!=null)
@@ -100,35 +100,63 @@ if((process!=null) && process.equals("1"))
 {
 	// create a persistence manager - needed if we want to use loaders or persistersi n blakcboard
 	BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
-	
+
 	//create a database loader for users
 	UserDbLoader loader = (UserDbLoader) bbPm.getLoader( UserDbLoader.TYPE );
 	//find what type the search is - can be usernameo r last name
 	String searchtype = request.getParameter("searchcriteria");
-	
+
 	//create a new blackboard list to hold user objects
 	blackboard.base.BbList userlist = new BbList(User.class);
-	
+
 	//create a database loader for portal role objects
 	PortalRoleDbLoader roleloader = (PortalRoleDbLoader) bbPm.getLoader( PortalRoleDbLoader.TYPE );
-	
+
+	// BRUTE FORCE METHOD:
+	PortalRole studentPortalRole = null;
+	for(PortalRole portalRole : roleloader.loadAll())
+	{
+		if(portalRole.getRoleName().equals("Student"))
+		{
+			studentPortalRole = portalRole;
+			break;
+		}
+	}
+
+	// // CODE THAT SHOULD WORK:
+	// PortalRole studentPortalRole = roleloader.loadByRoleName("Student");
+
+	// CODE FOR TESTING:
+	%><%-- PortalRole studentPortalRole = null;
+
+	Set<PortalRole> portalRoles = new HashSet<PortalRole>(roleloader.loadAll());
+
+	PortalRole test;
+	String portalRoleName;
+	for(PortalRole portalRole : portalRoles)
+	{
+		portalRoleName = portalRole.getRoleName();
+		try
+		{
+			test = roleloader.loadByRoleName(portalRoleName);
+			%>
+			<div>
+			Test succeeded for Portal Role <%=test.getRoleName()%>.
+			</div>
+			<%
+		}
+		catch(KeyNotFoundException exception)
+		{ %>
+			<div>
+			Test failed for Portal Role <%=portalRoleName%>.
+			</div>
+		<% }
+	} --%><%
+
 	//user did not specify a search string, so load all students
 	if(uid.equals(""))//load all students
 	{
-		//load all portal roles in Blackboard
-		BbList rolelist = roleloader.loadAll();
-		//create an iterator to step through the list of portal roles
-		Iterator roleIter = rolelist.iterator();
-			while(roleIter.hasNext())
-			{	
-				//get the next portal role
-				PortalRole role = (PortalRole)roleIter.next();
-				if(role.getRoleName().equals("Student"))//when we find trhe student role
-				{
-					// load all users who have that role in the system
-					userlist.addAll( loader.loadByPrimaryPortalRoleId(role.getId()) );
-				}
-			}
+		userlist.addAll(loader.loadByPrimaryPortalRoleId(studentPortalRole.getId()));
 	}
 	else //the user has specified some search string
 	{
@@ -138,10 +166,10 @@ if((process!=null) && process.equals("1"))
 			{
 				//if search string is only one letter, assume it's supposed to be capital
 				String search = request.getParameter("uid").toUpperCase();
-				
+
 				//create a database loader for Person objects
 				PersonLoader pL = (PersonLoader)bbPm.getLoader(PersonLoader.TYPE);
-				
+
 				// new person
 				Person p = new Person();
 				// search by family name
@@ -151,13 +179,13 @@ if((process!=null) && process.equals("1"))
 			}
 			else
 			{
-			
+
 				PersonLoader pL = (PersonLoader)bbPm.getLoader(PersonLoader.TYPE);
 				Person p = new Person();
 				//do not capitalize the search string if it's londer than one letter
 				p.setFamilyName("%"+request.getParameter("uid")+"%");
 				userlist = pL.load(p);
-				
+
 				//check if the search string is all lower case
 				boolean isLC = true;
 				String s = request.getParameter("uid");
@@ -172,7 +200,7 @@ if((process!=null) && process.equals("1"))
 					p.setFamilyName("%"+ss+"%");
 					userlist.addAll(pL.load(p));
 				}
-			}			
+			}
 		}
 		else if(searchtype.equals("2"))//search by user name
 		{
@@ -194,22 +222,15 @@ if((process!=null) && process.equals("1"))
 				userlist = loader.searchByUserName(searchString);
 			}
 		}
-		
-		// iterate through the results
+
+		// Filter out non-students.
 		Iterator userIter = userlist.iterator();
 		while(userIter.hasNext())
 		{
-			boolean isStudent = false;
-			User thisUser = (User)userIter.next();
-			String userRole = thisUser.getPortalRoleId().toExternalString();
-			if(userRole.equals("_1_1")) //student role's exernal string id is "_1_1"
+			User currentUser = (User)userIter.next();
+			if(!currentUser.getPortalRoleId().equals(studentPortalRole.getId()))
 			{
-					isStudent = true;
-			}
-			
-			if(!isStudent) //if user is not a student
-			{
-				userIter.remove(); //remove the user from the list
+				userIter.remove();
 			}
 		}
 	}
@@ -220,20 +241,20 @@ if((process!=null) && process.equals("1"))
 	userlist = userlist.getFilteredSubList(new GenericFieldFilter("getGivenName", User.class, "Blackboard", GenericFieldFilter.Comparison.NOT_EQUALS));
 	//remove users that have opted out
 	userlist = userlist.getFilteredSubList(new GenericFieldFilter("getBusinessFax", User.class, "No", GenericFieldFilter.Comparison.NOT_EQUALS));
-	
+
 	// sort by last name, first name
 	GenericFieldComparator comparator = new GenericFieldComparator(BaseComparator.ASCENDING,"getFamilyName",User.class);
     comparator.appendSecondaryComparator(new GenericFieldComparator(BaseComparator.ASCENDING,"getGivenName",User.class));
     Collections.sort(userlist,comparator);
-	
+
 	 %>
 	<span class="style7"><%=userlist.size()%>
-	<% 
+	<%
 	 	out.print(" student(s) located.");
-	 %><br>	
-	</span>	<bbUI:list collection="<%=userlist%>" 
-				collectionLabel="Students" 
-				objectId="student" 
+	 %><br>
+	</span>	<bbUI:list collection="<%=userlist%>"
+				collectionLabel="Students"
+				objectId="student"
 				className="User"
 				sortUrl="">
 
@@ -294,19 +315,19 @@ if((process!=null) && process.equals("1"))
 					<% if(!student.getBusinessPhone1().equals(""))
 					{
 						out.print("Work: "+student.getBusinessPhone1());
-					} %><br>	
-					
+					} %><br>
+
 					</td>
 					<td width="200" valign="top">
 <%
-	List<Course> courses = CourseDbLoader.Default.getInstance().loadByUserId(student.getId()); 
+	List<Course> courses = CourseDbLoader.Default.getInstance().loadByUserId(student.getId());
 
 	for (Course currentCourse: courses) {
 		Id id = currentCourse.getId();
 		String courseID = currentCourse.getCourseId();
 
 		String courseName = currentCourse.getTitle();
-		
+
 		String numbers = "0123456789";
 		boolean isOrg = true;
 		for(int i=0; i<10; i++){
