@@ -59,12 +59,13 @@ theImage.onError = null;
  * It displays only name, email and a photo. The students have to opt in to have their photo displayed in the directory.
  */
 
-//uid stores the search strong that tbe user specified
-String uid = "";
-if(request.getParameter("uid")!=null)
+String uid = request.getParameter("uid");
+if(uid == null)
 {
-	uid = request.getParameter("uid"); //get the search string if one exists
-} %>
+	uid = "";
+}
+
+%>
 <bbUI:titleBar 	iconUrl="/images/ci/icons/user_u.gif">Student Directory</bbUI:titleBar>
 <form action="userDir.jsp?mode=normal" method="post" name="searchusers" target="_self" id="searchusers">
 <span class="style2">
@@ -75,7 +76,7 @@ if(request.getParameter("uid")!=null)
 <span class="style1">Search by:
 <label>
 <%
-String check = "1"; // stores the seatch  criteria (can be last name (1) or user name (2)
+String check = "1"; // stores the search  criteria (can be last name (1) or user name (2))
 String roles = "3";
 if(request.getParameter("searchcriteria")!=null)
 {
@@ -83,38 +84,38 @@ if(request.getParameter("searchcriteria")!=null)
 }
 if(request.getParameter("rolesearch")!=null)
 {
-roles = request.getParameter("rolesearch");
+	roles = request.getParameter("rolesearch");
 }
  %>
   <input type="radio" name="searchcriteria" value="1" <% if(check.equals("1")){out.println("checked");}%>>
   Last Name</label>
   <label>
   <input type="radio" name="searchcriteria" value="2" <%if(check.equals("2")){out.println("checked");}%>>
-  Username</label><br>
-  <em>Note: These searches are case-sensitive.</em></span>
+  Username</label><br></span>
 </form>
 <%
 //process a search
 String process = request.getParameter("process");
 if((process!=null) && process.equals("1"))
 {
-	// create a persistence manager - needed if we want to use loaders or persistersi n blakcboard
+	// create a persistence manager - needed if we want to use loaders or persisters in blakcboard
 	BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
 
-	//create a database loader for users
-	UserDbLoader loader = (UserDbLoader) bbPm.getLoader( UserDbLoader.TYPE );
-	//find what type the search is - can be usernameo r last name
+	//find what type the search is - can be username or last name
 	String searchtype = request.getParameter("searchcriteria");
 
-	//create a new blackboard list to hold user objects
-	blackboard.base.BbList userlist = new BbList(User.class);
+	//create a new blackboard list to hold peron objects
+	BbList<Person> personList = new BbList<Person>();
+
+	//create a database loder for person objects
+	PersonLoader personLoader = (PersonLoader)bbPm.getLoader(PersonLoader.TYPE);
 
 	//create a database loader for portal role objects
-	PortalRoleDbLoader roleloader = (PortalRoleDbLoader) bbPm.getLoader( PortalRoleDbLoader.TYPE );
+	PortalRoleDbLoader roleLoader = (PortalRoleDbLoader)bbPm.getLoader(PortalRoleDbLoader.TYPE);
 
-	// BRUTE FORCE METHOD:
+	// BRUTE FORCE METHOD FOR FINDING STUDENT PORTAL ROLE:
 	PortalRole studentPortalRole = null;
-	for(PortalRole portalRole : roleloader.loadAll())
+	for(PortalRole portalRole : roleLoader.loadAll())
 	{
 		if(portalRole.getRoleName().equals("Student"))
 		{
@@ -123,13 +124,13 @@ if((process!=null) && process.equals("1"))
 		}
 	}
 
-	// // CODE THAT SHOULD WORK:
-	// PortalRole studentPortalRole = roleloader.loadByRoleName("Student");
+	// // CODE THAT SHOULD WORK BUT DOES NOT (bug report has been submitted):
+	// PortalRole studentPortalRole = roleLoader.loadByRoleName("Student");
 
-	// CODE FOR TESTING:
+	// CODE FOR TESTING ABOVE:
 	%><%-- PortalRole studentPortalRole = null;
 
-	Set<PortalRole> portalRoles = new HashSet<PortalRole>(roleloader.loadAll());
+	Set<PortalRole> portalRoles = new HashSet<PortalRole>(roleLoader.loadAll());
 
 	PortalRole test;
 	String portalRoleName;
@@ -138,7 +139,7 @@ if((process!=null) && process.equals("1"))
 		portalRoleName = portalRole.getRoleName();
 		try
 		{
-			test = roleloader.loadByRoleName(portalRoleName);
+			test = roleLoader.loadByRoleName(portalRoleName);
 			%>
 			<div>
 			Test succeeded for Portal Role <%=test.getRoleName()%>.
@@ -153,106 +154,52 @@ if((process!=null) && process.equals("1"))
 		<% }
 	} --%><%
 
+	// Create a new person to use as a template for searching with the PersonLoader's load() method
+	Person searchTemplate = new Person();
+	// We only want to load students.
+	searchTemplate.setPortalRoleId(studentPortalRole.getId());
+
 	//user did not specify a search string, so load all students
 	if(uid.equals(""))//load all students
 	{
-		userlist.addAll(loader.loadByPrimaryPortalRoleId(studentPortalRole.getId()));
+		personList.addAll(personLoader.load(searchTemplate));
 	}
 	else //the user has specified some search string
 	{
 		if(searchtype.equals("1")) //searching by last name
 		{
-			if(request.getParameter("uid").length()==1)
-			{
-				//if search string is only one letter, assume it's supposed to be capital
-				String search = request.getParameter("uid").toUpperCase();
-
-				//create a database loader for Person objects
-				PersonLoader pL = (PersonLoader)bbPm.getLoader(PersonLoader.TYPE);
-
-				// new person
-				Person p = new Person();
-				// search by family name
-				p.setFamilyName("%"+search+"%");
-				// loads everyone who has a last name like the one specified up top. % stands for a wildcard
-				userlist = pL.load(p);
-			}
-			else
-			{
-
-				PersonLoader pL = (PersonLoader)bbPm.getLoader(PersonLoader.TYPE);
-				Person p = new Person();
-				//do not capitalize the search string if it's londer than one letter
-				p.setFamilyName("%"+request.getParameter("uid")+"%");
-				userlist = pL.load(p);
-
-				//check if the search string is all lower case
-				boolean isLC = true;
-				String s = request.getParameter("uid");
-				for(int i = 0; i < s.length() && isLC; i++)
-				{
-					isLC = Character.isLowerCase(s.charAt(i));
-				}
-				if(isLC) // if it's all lower case - append another result - with the first letter capitalized
-				{
-					String ss = s.toLowerCase();
-					ss = (new Character(ss.charAt(0))).toString().toUpperCase() + ss.substring(1);
-					p.setFamilyName("%"+ss+"%");
-					userlist.addAll(pL.load(p));
-				}
-			}
+			// Search for last name with all lowercase
+			searchTemplate.setFamilyName("%" + uid.toLowerCase() + "%");
+			personList.addAll(personLoader.load(searchTemplate));
+			// Search for last name with first character uppercase and the rest lowercase
+			searchTemplate.setFamilyName("%" + uid.substring(0,1).toUpperCase() + uid.substring(1).toLowerCase() + "%");
+			personList.addAll(personLoader.load(searchTemplate));
 		}
-		else if(searchtype.equals("2"))//search by user name
+		else if(searchtype.equals("2"))//search by user name; user names never have capital letters
 		{
-			userlist = loader.searchByUserName(request.getParameter("uid").toLowerCase());
-		}
-		if(userlist.isEmpty() || userlist.size()==0) // if the rezults list is empty
-		{
-			String searchString = request.getParameter("uid").toLowerCase(); // try search with the search all lower case
-			searchString = (new Character(searchString.charAt(0))).toString().toUpperCase() + searchString.substring(1);
-			if(searchtype.equals("1"))
-			{
-				PersonLoader pL = (PersonLoader)bbPm.getLoader(PersonLoader.TYPE);
-				Person p = new Person();
-				p.setFamilyName("%"+searchString+"%");
-				userlist = pL.load(p);
-			}
-			else if(searchtype.equals("2"))
-			{
-				userlist = loader.searchByUserName(searchString);
-			}
-		}
-
-		// Filter out non-students.
-		Iterator userIter = userlist.iterator();
-		while(userIter.hasNext())
-		{
-			User currentUser = (User)userIter.next();
-			if(!currentUser.getPortalRoleId().equals(studentPortalRole.getId()))
-			{
-				userIter.remove();
-			}
+			searchTemplate.setUserName("%" + uid.toLowerCase() + "%");
+			personList.addAll(personLoader.load(searchTemplate));
 		}
 	}
 	// remove unavailable accounts from the list
-	userlist = userlist.getFilteredSubList(new AvailabilityFilter(AvailabilityFilter.AVAILABLE_ONLY));
+	personList = personList.getFilteredSubList(new AvailabilityFilter(AvailabilityFilter.AVAILABLE_ONLY));
 	// remove the default Mellon Accounts from the list
-	userlist = userlist.getFilteredSubList(new GenericFieldFilter("getGivenName", User.class, "Faculty Member", GenericFieldFilter.Comparison.NOT_EQUALS));
-	userlist = userlist.getFilteredSubList(new GenericFieldFilter("getGivenName", User.class, "Blackboard", GenericFieldFilter.Comparison.NOT_EQUALS));
+	personList = personList.getFilteredSubList(new GenericFieldFilter("getGivenName", User.class, "Faculty Member", GenericFieldFilter.Comparison.NOT_EQUALS));
+	personList = personList.getFilteredSubList(new GenericFieldFilter("getGivenName", User.class, "Blackboard", GenericFieldFilter.Comparison.NOT_EQUALS));
 	//remove users that have opted out
-	userlist = userlist.getFilteredSubList(new GenericFieldFilter("getBusinessFax", User.class, "No", GenericFieldFilter.Comparison.NOT_EQUALS));
+	personList = personList.getFilteredSubList(new GenericFieldFilter("getBusinessFax", User.class, "No", GenericFieldFilter.Comparison.NOT_EQUALS));
 
 	// sort by last name, first name
 	GenericFieldComparator comparator = new GenericFieldComparator(BaseComparator.ASCENDING,"getFamilyName",User.class);
     comparator.appendSecondaryComparator(new GenericFieldComparator(BaseComparator.ASCENDING,"getGivenName",User.class));
-    Collections.sort(userlist,comparator);
+    Collections.sort(personList,comparator);
 
 	 %>
-	<span class="style7"><%=userlist.size()%>
+	<span class="style7"><%=personList.size()%>
 	<%
 	 	out.print(" student(s) located.");
 	 %><br>
-	</span>	<bbUI:list collection="<%=userlist%>"
+	</span>	<bbUI:list collection="<%=personList%>"
 				collectionLabel="Students"
 				objectId="student"
 				className="User"
