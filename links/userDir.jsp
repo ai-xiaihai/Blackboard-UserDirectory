@@ -75,9 +75,8 @@ if(uid == null)
 <input name="process" type="hidden" id="process" value="1">
 <br>
 <span class="style1">Search by:
-<label>
 <%
-String check = "1"; // stores the search  criteria (can be last name (1) or user name (2))
+String check = "1"; // stores the search  criteria (can be first name (1), last name (2), or user name (3))
 String roles = "3";
 if(request.getParameter("searchcriteria")!=null)
 {
@@ -88,10 +87,14 @@ if(request.getParameter("rolesearch")!=null)
 	roles = request.getParameter("rolesearch");
 }
  %>
+  <label>
   <input type="radio" name="searchcriteria" value="1" <% if(check.equals("1")){out.println("checked");}%>>
+  First Name</label>
+  <label>
+  <input type="radio" name="searchcriteria" value="2" <% if(check.equals("2")){out.println("checked");}%>>
   Last Name</label>
   <label>
-  <input type="radio" name="searchcriteria" value="2" <%if(check.equals("2")){out.println("checked");}%>>
+  <input type="radio" name="searchcriteria" value="3" <%if(check.equals("3")){out.println("checked");}%>>
   Username</label><br></span>
 </form>
 <%
@@ -103,7 +106,7 @@ if((process!=null) && process.equals("1"))
 	BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
 
 	//find what type the search is - can be username or last name
-	String searchtype = request.getParameter("searchcriteria");
+	String searchType = request.getParameter("searchcriteria");
 
 	//create a new blackboard list to hold peron objects
 	BbList<Person> personList = new BbList<Person>();
@@ -169,17 +172,27 @@ if((process!=null) && process.equals("1"))
 	}
 	else //the user has specified some search string
 	{
-		if(searchtype.equals("1")) //searching by last name
+		if(searchType.equals("1")) //searching by first name
 		{
-			// Search for last name with all lowercase
-			searchTemplate.setFamilyName("%" + uid.toLowerCase() + "%");
+			// Search with all lowercase
+			searchTemplate.setGivenName("%" + uid.toLowerCase() + "%");
 			personList.addAll(personLoader.load(searchTemplate));
-			// Search for last name with first character uppercase and the rest lowercase
-			searchTemplate.setFamilyName("%" + uid.substring(0,1).toUpperCase() + uid.substring(1).toLowerCase() + "%");
+			// Search with first character capitalized and the rest lowercase
+			searchTemplate.setGivenName("%" + uid.substring(0, 1).toUpperCase() + uid.substring(1).toLowerCase() + "%");
 			personList.addAll(personLoader.load(searchTemplate));
 		}
-		else if(searchtype.equals("2"))//search by user name; user names never have capital letters
+		if(searchType.equals("2")) //searching by last name
 		{
+			// Search with all lowercase
+			searchTemplate.setFamilyName("%" + uid.toLowerCase() + "%");
+			personList.addAll(personLoader.load(searchTemplate));
+			// Search with first character capitalized and the rest lowercase
+			searchTemplate.setFamilyName("%" + uid.substring(0, 1).toUpperCase() + uid.substring(1).toLowerCase() + "%");
+			personList.addAll(personLoader.load(searchTemplate));
+		}
+		else if(searchType.equals("3")) //search by user name
+		{
+			// Usernames never have capital letters; make all lowercase
 			searchTemplate.setUserName("%" + uid.toLowerCase() + "%");
 			personList.addAll(personLoader.load(searchTemplate));
 		}
