@@ -1,5 +1,6 @@
 <%@page import="java.util.*,
 				blackboard.admin.data.user.*,
+				blackboard.admin.data.IAdminObject,
 				blackboard.admin.persist.user.*,
 				blackboard.base.*,
 				blackboard.data.*,
@@ -158,6 +159,8 @@ if((process!=null) && process.equals("1"))
 	Person searchTemplate = new Person();
 	// We only want to load students.
 	searchTemplate.setPortalRoleId(studentPortalRole.getId());
+	// We only want to load enabled students.
+	searchTemplate.setRowStatus(IAdminObject.RowStatus.ENABLED);
 
 	//user did not specify a search string, so load all students
 	if(uid.equals(""))//load all students
