@@ -2,9 +2,9 @@
 <manifest>
   <!-- core extension information -->
   <plugin>
-    <name value= "OCTET Student Directory"/>
-    <handle value= "octetstudd"/>
-    <description value= "Student Directory Plugin."/>
+    <name value= "OCTET User Directory"/>
+    <handle value= "octetuserd"/>
+    <description value= "OCTET User Directory Plugin."/>
     <version value= "1.0.0.1"/>
     <requires>
     	<bbversion value="9.1.0"/>
@@ -22,15 +22,15 @@
 
     <!-- Tools defined by this extension -->
     <application-defs>
-      <application handle="studentdir" type="system" use-ssl="false" name="Profile" can-allow-guest="true"
+      <application handle="userdir" type="system" use-ssl="false" name="Profile" can-allow-guest="true"
        small-icon="" large-icon="">
         <description lang="en_US">Application installed as part of the OCTET plugin.</description>
         <links>
 		   <link>
             <type value="user_tool"/>
-            <name value="Student Directory"/>
+            <name value="OCTET User Directory"/>
             <url value="links/userDir.jsp"/>
-            <description value="Student Directory with built-in search." />
+            <description value="User Directory with built-in search." />
             <icons>
               <listitem value="images/icon.gif"/>
             </icons>

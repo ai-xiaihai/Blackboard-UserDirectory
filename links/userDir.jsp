@@ -1,4 +1,4 @@
-<%@page import="java.util.*,
+<%@ page import="java.util.*,
 				blackboard.admin.data.user.*,
 				blackboard.admin.data.IAdminObject,
 				blackboard.admin.persist.user.*,
@@ -18,8 +18,8 @@
 <script>
 function imageError(theImage)
 {
-theImage.src="http://octet1.csr.oberlin.edu/octet/Bb/Faculty/img/noimage.jpg";
-theImage.onError = null;
+	theImage.src="http://octet1.csr.oberlin.edu/octet/Bb/Faculty/img/noimage.jpg";
+	theImage.onError = null;
 }
 </script>
 <%@ taglib uri="/bbData" prefix="bbData"%>
@@ -48,24 +48,169 @@ theImage.onError = null;
 -->
 </style>
 
+<%!
+	// Take in some iterable data structure of PortalRoles and see if any of them return roleName from their getRoleName method.
+	// If so, return that PortalRole. If not, return null.
+	public PortalRole getPortalRoleByName(Iterable<PortalRole> portalRoles, String roleName)
+	{
+		for(PortalRole portalRole : portalRoles)
+		{
+			if(portalRole.getRoleName().equals(roleName))
+			{
+				return portalRole;
+			}
+		}
+		return null;
+	}
+
+	// Comparator class for sorting users based on how closely they match the search term.
+	// Tiebreakers are included in an attempt to avoid falsely equating users.
+	protected static abstract class NameComparator implements Comparator<User>
+	{
+		// The term we are comparing each name to; this should just be the search term
+		// specified through POST data.
+		private String term;
+
+		// Which name should we compare to the search term?
+		protected abstract String extractPrimaryName(User user);
+		// Which name should we use for tiebreakers?
+		protected abstract String extractSecondaryName(User user);
+		// (Optional and, in the case of first and last name comparisons, redundant)
+		// Which name should we use for secondary tiebreakers?
+		protected String extractTertiaryName(User user)
+		{
+			return "";
+		}
+
+		// Don't want to call toLowerCase() on the search time every time it's used.
+		public NameComparator(String term)
+		{
+			this.term = term.toLowerCase();
+		}
+
+		public int compare(User userOne, User userTwo)
+		{
+			// If the sought-after name field of either User object differs, return based
+			// on the private compare() method.
+			int result = compare(extractPrimaryName(userOne), extractPrimaryName(userTwo));
+			if(result != 0)
+			{
+				return result;
+			}
+			// If not, and the tiebreaker names differ, return based on their lexicographical
+			// comparison.
+			result = extractSecondaryName(userOne).compareTo(extractSecondaryName(userTwo));
+			if(result != 0)
+			{
+				return result;
+			}
+			// And, if both primary and secondary names are identical (most likely in the
+			// event of a search by username), return based on lexicographical comparison
+			// of the second tiebreaker names.
+			return extractTertiaryName(userOne).compareTo(extractTertiaryName(userTwo));
+		}
+
+		private int compare(String nameOne, String nameTwo)
+		{
+			// If one of the names is identical to the search term but not the other,
+			// give it priority. If both names are equal, return a tie immediately.
+			// Reverse arguments (nameTwo first, nameOne second) to fit with the
+			// Boolean class's compare() method.
+			int result = Boolean.compare(nameTwo.equalsIgnoreCase(this.term), nameOne.equalsIgnoreCase(this.term));
+			if(result != 0 || nameOne.equals(nameTwo))
+			{
+				return result;
+			}
+			// If one of the names begins with the search term but not the other,
+			// give it priority.
+			result = Boolean.compare(nameTwo.toLowerCase().startsWith(this.term), nameOne.toLowerCase().startsWith(this.term));
+			if(result != 0)
+			{
+				return result;
+			}
+			// Return a lexicographical comparison of the two names.
+			return nameOne.compareTo(nameTwo);
+		}
+	}
+
+	// Compare last names, break ties with first names.
+	private static class LastNameComparator extends NameComparator
+	{
+		public LastNameComparator(String term)
+		{
+			super(term);
+		}
+
+		protected String extractPrimaryName(User user)
+		{
+			return user.getFamilyName();
+		}
+
+		protected String extractSecondaryName(User user)
+		{
+			return user.getGivenName();
+		}
+	}
+	// Compare first names, break ties with last names.
+	private static class FirstNameComparator extends NameComparator
+	{
+		public FirstNameComparator(String term)
+		{
+			super(term);
+		}
+
+		protected String extractPrimaryName(User user)
+		{
+			return user.getGivenName();
+		}
+
+		protected String extractSecondaryName(User user)
+		{
+			return user.getFamilyName();
+		}
+	}
+	// Compare user names, break ties with first names and then last names.
+	private static class UserNameComparator extends NameComparator
+	{
+		public UserNameComparator(String term)
+		{
+			super(term);
+		}
+
+		protected String extractPrimaryName(User user)
+		{
+			return user.getUserName();
+		}
+
+		protected String extractSecondaryName(User user)
+		{
+			return user.getGivenName();
+		}
+
+		protected String extractTertiaryName(User user)
+		{
+			return user.getFamilyName();
+		}
+	}
+%>
 
 <bbData:context id="ctx">
-<bbUI:docTemplate title="User Directory">
+<bbUI:docTemplate title="OCTET User Directory">
 <bbUI:breadcrumbBar environment="PORTAL">
- <bbUI:breadcrumb>User Directory</bbUI:breadcrumb>
+ <bbUI:breadcrumb>OCTET User Directory</bbUI:breadcrumb>
 </bbUI:breadcrumbBar>
 
 <%
-/* This is the entry point for the student directory.
- * The student directory allows users in blackboard to seatch for students by username or last name.
- * It displays only name, email and a photo. The students have to opt in to have their photo displayed in the directory.
+/* This is the entry point for the user directory.
+ * The user directory allows users in blackboard to search for students, faculty, and staff by last name, first name, and user name.
+ * It displays only name, username, email and a photo.
  */
 
 // What text did they ask to search for?
-String uid = request.getParameter("uid");
-if(uid == null)
+String searchTerm = request.getParameter("searchterm");
+if(searchTerm == null)
 {
-	uid = "";
+	searchTerm = "";
 }
 
 // How do they want to search--first name, last name, or user name? Defaults to last name.
@@ -83,30 +228,30 @@ if(searchRole == null)
 }
 %>
 
-<bbUI:titleBar 	iconUrl="/images/ci/icons/user_u.gif">Student Directory</bbUI:titleBar>
+<bbUI:titleBar iconUrl="/images/ci/icons/user_u.gif">OCTET User Directory</bbUI:titleBar>
 <form action="userDir.jsp" method="post" id="searchusers">
 <span class="style2">
-<input name="uid" type="text" size="40" value="<%=uid%>">
+<input name="searchterm" type="text" size="40" value="<%=searchTerm%>">
 <bbUI:button type="INLINE" name="search" alt="Search" action="SUBMIT_FORM"></bbUI:button>
 <input name="process" type="hidden" id="process" value="1">
 <br>
 <span class="style1">Search by:
   <label>
-  <input type="radio" name="searchcriteria" value="first" <% if(searchCriteria.equals("first")){out.println("checked");} %> >
+  <input type="radio" name="searchcriteria" value="first" <% if(searchCriteria.equals("first")) { out.println("checked"); } %> >
   First Name</label>
   <label>
-  <input type="radio" name="searchcriteria" value="last" <% if(searchCriteria.equals("last")){out.println("checked");} %> >
+  <input type="radio" name="searchcriteria" value="last" <% if(searchCriteria.equals("last")) { out.println("checked"); } %> >
   Last Name</label>
   <label>
-  <input type="radio" name="searchcriteria" value="user" <% if(searchCriteria.equals("user")){out.println("checked");} %> >
+  <input type="radio" name="searchcriteria" value="user" <% if(searchCriteria.equals("user")) { out.println("checked"); } %> >
   Username</label><br>
 </span>
 <span class="style1">Search for:
   <label>
-  <input type="radio" name="searchrole" value="student" <% if(searchRole.equals("student")){out.println("checked");} %> >
+  <input type="radio" name="searchrole" value="student" <% if(searchRole.equals("student")) { out.println("checked"); } %> >
   Students</label>
   <label>
-  <input type="radio" name="searchrole" value="facultystaff" <% if(searchRole.equals("facultystaff")){out.println("checked");} %> >
+  <input type="radio" name="searchrole" value="facultystaff" <% if(searchRole.equals("facultystaff")) { out.println("checked"); } %> >
   Faculty/Staff</label><br>
 </span>
 </form>
@@ -114,171 +259,121 @@ if(searchRole == null)
 // Determine whether or not they actually specified a search with another variable, since a blank search term is valid.
 if(request.getParameter("process") != null)
 {
-	// create a persistence manager - needed if we want to use loaders or persisters in blakcboard
+	// Create a persistence manager - needed if we want to use loaders or persisters in blackboard.
 	BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+	// Create a portal role loader, for locating and indentifying the portal roles of users.
+	PortalRoleDbLoader portalRoleLoader = (PortalRoleDbLoader)bbPm.getLoader(PortalRoleDbLoader.TYPE);
+	// Create a user loader, for loading users from the database.
+	UserDbLoader userLoader = (UserDbLoader)bbPm.getLoader(UserDbLoader.TYPE);
 
-	// sort by last name, first name
-	GenericFieldComparator comparator = new GenericFieldComparator(BaseComparator.ASCENDING,"getFamilyName",User.class);
-	comparator.appendSecondaryComparator(new GenericFieldComparator(BaseComparator.ASCENDING,"getGivenName",User.class));
-	//create a treeset (alphabetized, unique entries) to store user objects
-	TreeSet<Person> personSet = new TreeSet<Person>(comparator);
+	// Load all portal roles once to avoid redundancy with calls to getPortalRoleByName().
+	List<PortalRole> portalRoles = portalRoleLoader.loadAll();
+	// Find the student portal role.
+	PortalRole studentPortalRole = getPortalRoleByName(portalRoles, "Student");
+	// Find the faculty portal role.
+	PortalRole facultyPortalRole = getPortalRoleByName(portalRoles, "Faculty");
+	// Find the staff portal role.
+	PortalRole staffPortalRole = getPortalRoleByName(portalRoles, "Staff");
 
-	//create a database loder for person objects
-	PersonLoader personLoader = (PersonLoader)bbPm.getLoader(PersonLoader.TYPE);
-
-	//create a database loader for portal role objects
-	PortalRoleDbLoader roleLoader = (PortalRoleDbLoader)bbPm.getLoader(PortalRoleDbLoader.TYPE);
-
-	// BRUTE FORCE METHOD FOR FINDING STUDENT (and faculty and staff) PORTAL ROLE(s):
-	PortalRole studentPortalRole = null;
-	PortalRole facultyPortalRole = null;
-	PortalRole staffPortalRole = null;
-	for(PortalRole portalRole : roleLoader.loadAll())
-	{
-		switch(portalRole.getRoleName())
-		{
-			case "Student":
-				studentPortalRole = portalRole;
-				break;
-			case "Faculty":
-				facultyPortalRole = portalRole;
-				break;
-			case "Staff":
-				staffPortalRole = portalRole;
-				break;
-		}
-		// We've found every role we need to and can exit the loop.
-		if(staffPortalRole != null && facultyPortalRole != null && studentPortalRole != null)
-		{
-			break;
-		}
-	}
-
+	// Find the current user's portal role.
 	Id currentUserPortalRoleId = ctx.getUser().getPortalRoleId();
-	if(ctx.getUser().getUserName().equals("cegerton"))
-	{
-		currentUserPortalRoleId = facultyPortalRole.getId();
-	}
+	// Should we show them potentially sensitive information?
+	// (Only if the current user is a member of staff/faculty.)
+	boolean displayPrivilegedInformation = currentUserPortalRoleId.equals(facultyPortalRole.getId()) || currentUserPortalRoleId.equals(staffPortalRole.getId());
 
-	Id[] portalRoleIds = null;
+	// Which portal roles does the user want to see?
+	Id validPortalRoleIdOne = null;
+	Id validPortalRoleIdTwo = null;
 	if(searchRole.equals("student"))
 	{
-		portalRoleIds = new Id[] {studentPortalRole.getId()};
+		validPortalRoleIdOne = studentPortalRole.getId();
 	}
 	else if(searchRole.equals("facultystaff"))
 	{
-		portalRoleIds = new Id[] {facultyPortalRole.getId(), staffPortalRole.getId()};
+		validPortalRoleIdOne = facultyPortalRole.getId();
+		validPortalRoleIdTwo = staffPortalRole.getId();
 	}
 
-	// // CODE THAT SHOULD WORK BUT DOES NOT (bug report has been submitted):
-	// PortalRole studentPortalRole = roleLoader.loadByRoleName("Student");
+	// We want a list of unique entries, sorted by how closely they resemble the search term.
+	TreeSet<User> userSet;
 
-	// CODE FOR TESTING THE ABOVE:
-	%><%--
-	Set<PortalRole> portalRoles = new HashSet<PortalRole>(roleLoader.loadAll());
-
-	PortalRole test;
-	String portalRoleName;
-	for(PortalRole portalRole : portalRoles)
+	// Create a UserSearch object, for use with the UserDbLoader's loadByUserSearch() method.
+	UserSearch userSearch = new UserSearch();
+	// Don't show disabled users.
+	userSearch.setOnlyShowEnabled(true);
+	// Instantiate the set of users with the appropriate comparator, set up the parameters
+	// for the search, and then load users based on the search into our set.
+	if(searchCriteria.equals("first"))
 	{
-		portalRoleName = portalRole.getRoleName();
-		try
-		{
-			test = roleLoader.loadByRoleName(portalRoleName);
-			%>
-			<div>
-			Test succeeded for Portal Role <%=test.getRoleName()%>.
-			</div>
-			<%
-		}
-		catch(KeyNotFoundException exception)
-		{ %>
-			<div>
-			Test failed for Portal Role <%=portalRoleName%>.
-			</div>
-		<% }
-	} --%><%
-
-	// Create a Person object to use as a template for searching with the PersonLoader's load() method
-	Person searchTemplate = new Person();
-	// We only want to load enabled users.
-	searchTemplate.setRowStatus(IAdminObject.RowStatus.ENABLED);
-	// We only want to load available users.
-	searchTemplate.setIsAvailable(true);
-
-	// Can't let users search for names with wildcards in them.
-	if(!uid.contains("%"))
+		userSet = new TreeSet(new FirstNameComparator(searchTerm));
+		userSearch.setNameParameter(UserSearch.SearchKey.GivenName, SearchOperator.Contains, searchTerm);
+		userSet.addAll(userLoader.loadByUserSearch(userSearch));
+	}
+	else if(searchCriteria.equals("last"))
 	{
-		// Iterate over possible Portal Role IDs (have to accomodate possibility of multiple IDs if faculty/staff are being searched for).
-		for(Id id : portalRoleIds)
+		userSet = new TreeSet(new LastNameComparator(searchTerm));
+		userSearch.setNameParameter(UserSearch.SearchKey.FamilyName, SearchOperator.Contains, searchTerm);
+		userSet.addAll(userLoader.loadByUserSearch(userSearch));
+	}
+	else if(searchCriteria.equals("user"))
+	{
+		userSet = new TreeSet(new UserNameComparator(searchTerm));
+		userSearch.setNameParameter(UserSearch.SearchKey.UserName, SearchOperator.Contains, searchTerm);
+		userSet.addAll(userLoader.loadByUserSearch(userSearch));
+	}
+	else
+	{
+		// Make the compiler happy.
+		userSet = null;
+	}
+	// Create a BbList to interact with BlackBoard's HTML framework.
+	BbList<User> userList = new BbList<User>();
+
+	String userName;
+	// Iterate over every user we've found.
+	for(User user : userSet)
+	{
+		// Skip them if they're unavailable.
+		if(user.getIsAvailable())
 		{
-			searchTemplate.setPortalRoleId(id);
-			// The user did not specify a search string, so load all students.
-			if(uid.equals(""))
+			// Find out what kind of user (student, faculty, administrator, etc.) they are.
+			Id userPortalRoleId = portalRoleLoader.loadPrimaryRoleByUserId(user.getId()).getId();
+			// Skip them if they aren't what the user has asked for.
+			if(userPortalRoleId.equals(validPortalRoleIdOne) || userPortalRoleId.equals(validPortalRoleIdTwo))
 			{
-				personSet.addAll(personLoader.load(searchTemplate));
-			}
-			// The user has specified a search string.
-			else
-			{
-				if(searchCriteria.equals("first")) //searching by first name
+				// Unless a member of faculty/staff is performing the search, filter out
+				// name matches based on legal names instead of preferred names.
+				if(searchCriteria.equals("first") && !displayPrivilegedInformation && (userName = user.getGivenName()).contains("("))
 				{
-					// Search with user-specified capitalization.
-					searchTemplate.setGivenName("%" + uid + "%");
-					personSet.addAll(personLoader.load(searchTemplate));
-					// Search with user-specified capitalization and first character capitalized.
-					searchTemplate.setGivenName("%" + uid.substring(0, 1).toUpperCase() + uid.substring(1) + "%");
-					personSet.addAll(personLoader.load(searchTemplate));
-					// Search with all lowercase.
-					searchTemplate.setGivenName("%" + uid.toLowerCase() + "%");
-					personSet.addAll(personLoader.load(searchTemplate));
-					// Search with first character capitalized and the rest lowercase.
-					searchTemplate.setGivenName("%" + uid.substring(0, 1).toUpperCase() + uid.substring(1).toLowerCase() + "%");
-					personSet.addAll(personLoader.load(searchTemplate));
+					if(!userName.substring(0, userName.indexOf('(') - 1).contains(searchTerm))
+					{
+						continue;
+					}
 				}
-				if(searchCriteria.equals("last")) //searching by last name
-				{
-					// Search with user-specified capitalization.
-					searchTemplate.setFamilyName("%" + uid + "%");
-					personSet.addAll(personLoader.load(searchTemplate));
-					// Search with user-specified capitalization and first character capitalized.
-					searchTemplate.setFamilyName("%" + uid.substring(0, 1).toUpperCase() + uid.substring(1) + "%");
-					personSet.addAll(personLoader.load(searchTemplate));
-					// Search with all lowercase.
-					searchTemplate.setFamilyName("%" + uid.toLowerCase() + "%");
-					personSet.addAll(personLoader.load(searchTemplate));
-					// Search with first character capitalized and the rest lowercase.
-					searchTemplate.setFamilyName("%" + uid.substring(0, 1).toUpperCase() + uid.substring(1).toLowerCase() + "%");
-					personSet.addAll(personLoader.load(searchTemplate));
-				}
-				else if(searchCriteria.equals("user")) //search by user name
-				{
-					// Usernames never have capital letters; make all lowercase.
-					searchTemplate.setUserName("%" + uid.toLowerCase() + "%");
-					personSet.addAll(personLoader.load(searchTemplate));
-				}
+				// Add the user to our BbList!
+				userList.add(user);
 			}
 		}
 	}
-	// Create a BbList to work with the set of user objects within the blackboard html framework.
-	BbList<User> personList = new BbList<User>();
-	personList.addAll(personSet);
 
-	// // remove unavailable accounts from the list
-	// personList = personList.getFilteredSubList(new AvailabilityFilter(AvailabilityFilter.AVAILABLE_ONLY));
-	// // remove the default Mellon Accounts from the list
-	// personList = personList.getFilteredSubList(new GenericFieldFilter("getGivenName", User.class, "Faculty Member", GenericFieldFilter.Comparison.NOT_EQUALS));
-	// personList = personList.getFilteredSubList(new GenericFieldFilter("getGivenName", User.class, "Blackboard", GenericFieldFilter.Comparison.NOT_EQUALS));
-
-	//remove users that have opted out
-	personList = personList.getFilteredSubList(new GenericFieldFilter("getBusinessFax", User.class, "No", GenericFieldFilter.Comparison.NOT_EQUALS));
-
-	 %>
-	<span class="style7"><%=personSet.size()%>
-	<%
-	 	out.print(" student(s) located.");
-	 %><br>
-	</span>	<bbUI:list collection="<%=personList%>"
+	// Not sure this is relevant anymore... if so, it can probably be re-implemented in the body
+	// of the for-loop above.
+	// // Remove users that have opted out
+	// personList = personList.getFilteredSubList(new GenericFieldFilter("getBusinessFax", User.class, "No", GenericFieldFilter.Comparison.NOT_EQUALS));
+	%>
+	<span class="style7">
+		<%
+		out.println(userList.size());
+		if(searchRole.equals("student"))
+		{
+			out.println("student(s)");
+		}
+		else if(searchRole.equals("faculty staff"))
+		{
+			out.println("faculty/staff");
+		}
+		%> located.<br>
+	</span>	<bbUI:list collection="<%=userList%>"
 				collectionLabel="Users"
 				objectId="user"
 				className="User"
@@ -293,48 +388,47 @@ if(request.getParameter("process") != null)
 						<img src="http://octet1.csr.oberlin.edu/octet/Bb/Photos/expo/<%=user.getUserName()%>/profileImage" name="facPhoto" width="70" onError="imageError(this)">
 					</td>
 					<td width="200"><span class="style3">
-							<%=user.getFamilyName()%>,
-							<%	String usersFirstName = user.getGivenName();
-							 	if(currentUserPortalRoleId.equals(studentPortalRole.getId()) && searchRole.equals("student") && usersFirstName.contains("("))
-								{
-									out.print(usersFirstName.substring(0, usersFirstName.indexOf('(') - 1));
-								}
-								else
-								{
-									out.print(usersFirstName);
-								} %>
+					<%
+						out.println(user.getFamilyName() + ", ");
+						String userFirstName = user.getGivenName();
+					 	if(!displayPrivilegedInformation && searchRole.equals("student") && userFirstName.contains("("))
+						{
+							out.print(userFirstName.substring(0, userFirstName.indexOf('(') - 1));
+						}
+						else
+						{
+							out.print(userFirstName);
+						}
+					%>
 					<br><br></span>
 					<% if(!user.getUserName().equals(""))
 					{
 						out.print("Email: " + user.getUserName() + "@oberlin.edu <br><br>");
 						out.print("Username: " + user.getUserName());
 					} %><br><br>
-					<% if((currentUserPortalRoleId.equals(facultyPortalRole.getId()) || currentUserPortalRoleId.equals(staffPortalRole.getId())) && !user.getDepartment().equals("")) //major
+					<% if(displayPrivilegedInformation && !user.getDepartment().equals("")) //major
 					{
 						out.print(user.getDepartment());
 					} %><br><br>
 					</td>
 					<td width="200" valign="top">
-<%
-	if(currentUserPortalRoleId.equals(facultyPortalRole.getId()) || currentUserPortalRoleId.equals(staffPortalRole.getId()))
+	<%
+	if(displayPrivilegedInformation)
 	{
 		for (Course course : CourseDbLoader.Default.getInstance().loadByUserId(user.getId()))
-		{ %>
-			<%=course.getTitle()%>
-			<br>
-		<% }
+		{
+			out.println(course.getTitle() + "<br>");
+		}
 	}
-%>
-
-
-					</td></tr></table>
+	%>
+</td></tr></table>
 </bbUI:listElement></bbUI:list>
-	<%
+<%
 }
 %>
 
 <script language="JavaScript">
-document.getElementById("searchusers").uid.focus();
+document.getElementById("searchusers").searchterm.focus();
 </script>
 
 </bbUI:docTemplate>
