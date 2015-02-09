@@ -72,15 +72,9 @@ function imageError(theImage)
 		private String term;
 
 		// Which name should we compare to the search term?
-		protected abstract String extractPrimaryName(User user);
-		// Which name should we use for tiebreakers?
-		protected abstract String extractSecondaryName(User user);
-		// (Optional and, in the case of first and last name comparisons, redundant)
-		// Which name should we use for secondary tiebreakers?
-		protected String extractTertiaryName(User user)
-		{
-			return "";
-		}
+		protected abstract String extractComparisonName(User user);
+		// Which names should we use for tiebreakers (in order of descending priority)?
+		protected abstract String[] extractTiebreakerNames(User user);
 
 		// Don't want to call toLowerCase() on the search time every time it's used.
 		public NameComparator(String term)
@@ -90,34 +84,35 @@ function imageError(theImage)
 
 		public int compare(User userOne, User userTwo)
 		{
-			// If the sought-after name field of either User object differs, return based
-			// on the private compare() method.
-			int result = compare(extractPrimaryName(userOne), extractPrimaryName(userTwo));
+			// Compare both names to see which (if either) more closely matches the
+			// search term. If one is preferable, return it.
+			int result = compare(extractComparisonName(userOne), extractComparisonName(userTwo));
 			if(result != 0)
 			{
 				return result;
 			}
-			// If not, and the tiebreaker names differ, return based on their lexicographical
-			// comparison.
-			result = extractSecondaryName(userOne).compareTo(extractSecondaryName(userTwo));
-			if(result != 0)
+			// Iterate over each of the tiebreaker names; if any is more preferable,
+			// return it. If not, assume the users are identical (really should not happen).
+			String[] tiebreakerNamesOne = extractTiebreakerNames(userOne);
+			String[] tiebreakerNamesTwo = extractTiebreakerNames(userTwo);
+			for(int i = 0; i < tiebreakerNamesOne.length && i < tiebreakerNamesTwo.length; i++)
 			{
-				return result;
+				result = tiebreakerNamesOne[i].compareTo(tiebreakerNamesTwo[i]);
+				if(result != 0)
+				{
+					return result;
+				}
 			}
-			// And, if both primary and secondary names are identical (most likely in the
-			// event of a search by username), return based on lexicographical comparison
-			// of the second tiebreaker names.
-			return extractTertiaryName(userOne).compareTo(extractTertiaryName(userTwo));
+			return 0;
 		}
 
 		private int compare(String nameOne, String nameTwo)
 		{
 			// If one of the names is identical to the search term but not the other,
-			// give it priority. If both names are equal, return a tie immediately.
-			// Reverse arguments (nameTwo first, nameOne second) to fit with the
-			// Boolean class's compare() method.
+			// give it priority. Reverse arguments (nameTwo first, nameOne second)
+			// to fit with the Boolean class's compare() method.
 			int result = Boolean.compare(nameTwo.equalsIgnoreCase(this.term), nameOne.equalsIgnoreCase(this.term));
-			if(result != 0 || nameOne.equals(nameTwo))
+			if(result != 0)
 			{
 				return result;
 			}
@@ -133,7 +128,7 @@ function imageError(theImage)
 		}
 	}
 
-	// Compare last names, break ties with first names.
+	// Compare last names, break ties with first names and then user names.
 	private static class LastNameComparator extends NameComparator
 	{
 		public LastNameComparator(String term)
@@ -141,17 +136,17 @@ function imageError(theImage)
 			super(term);
 		}
 
-		protected String extractPrimaryName(User user)
+		protected String extractComparisonName(User user)
 		{
 			return user.getFamilyName();
 		}
 
-		protected String extractSecondaryName(User user)
+		protected String[] extractTiebreakerNames(User user)
 		{
-			return user.getGivenName();
+			return new String[] { user.getGivenName(), user.getFamilyName() };
 		}
 	}
-	// Compare first names, break ties with last names.
+	// Compare first names, break ties with last names and then user names.
 	private static class FirstNameComparator extends NameComparator
 	{
 		public FirstNameComparator(String term)
@@ -159,14 +154,14 @@ function imageError(theImage)
 			super(term);
 		}
 
-		protected String extractPrimaryName(User user)
+		protected String extractComparisonName(User user)
 		{
 			return user.getGivenName();
 		}
 
-		protected String extractSecondaryName(User user)
+		protected String[] extractTiebreakerNames(User user)
 		{
-			return user.getFamilyName();
+			return new String[] { user.getFamilyName(), user.getGivenName() };
 		}
 	}
 	// Compare user names, break ties with first names and then last names.
@@ -177,19 +172,14 @@ function imageError(theImage)
 			super(term);
 		}
 
-		protected String extractPrimaryName(User user)
+		protected String extractComparisonName(User user)
 		{
 			return user.getUserName();
 		}
 
-		protected String extractSecondaryName(User user)
+		protected String[] extractTiebreakerNames(User user)
 		{
-			return user.getGivenName();
-		}
-
-		protected String extractTertiaryName(User user)
-		{
-			return user.getFamilyName();
+			return new String[] { user.getGivenName(), user.getFamilyName() };
 		}
 	}
 %>
@@ -345,7 +335,8 @@ if(request.getParameter("process") != null)
 				// name matches based on legal names instead of preferred names.
 				if(searchCriteria.equals("first") && !displayPrivilegedInformation && (userName = user.getGivenName()).contains("("))
 				{
-					if(!userName.substring(0, userName.indexOf('(') - 1).contains(searchTerm))
+					String preferredName = userName.substring(0, userName.indexOf('(') - 1).toLowerCase();
+					if(!preferredName.contains(searchTerm.toLowerCase()))
 					{
 						continue;
 					}
