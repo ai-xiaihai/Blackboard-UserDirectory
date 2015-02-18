@@ -143,7 +143,7 @@ function imageError(theImage)
 
 		protected String[] extractTiebreakerNames(User user)
 		{
-			return new String[] { user.getGivenName(), user.getFamilyName() };
+			return new String[] { user.getGivenName(), user.getUserName() };
 		}
 	}
 	// Compare first names, break ties with last names and then user names.
@@ -161,7 +161,7 @@ function imageError(theImage)
 
 		protected String[] extractTiebreakerNames(User user)
 		{
-			return new String[] { user.getFamilyName(), user.getGivenName() };
+			return new String[] { user.getFamilyName(), user.getUserName() };
 		}
 	}
 	// Compare user names, break ties with first names and then last names.
