@@ -187,7 +187,7 @@ function imageError(theImage)
 <bbData:context id="ctx">
 <bbUI:docTemplate title="OCTET User Directory">
 <bbUI:breadcrumbBar environment="PORTAL">
- <bbUI:breadcrumb href="https://oberlintest.blackboard.com/">Blackboard</bbUI:breadcrumb>
+ <bbUI:breadcrumb href="https://blackboard.oberlin.edu/">Click here to return to Blackboard</bbUI:breadcrumb>
  <bbUI:breadcrumb>OCTET User Directory</bbUI:breadcrumb>
 </bbUI:breadcrumbBar>
 
