@@ -1,4 +1,5 @@
 <%@ page import="java.util.*,
+				java.text.SimpleDateFormat,
 				blackboard.admin.data.user.*,
 				blackboard.admin.data.IAdminObject,
 				blackboard.admin.persist.user.*,
@@ -256,6 +257,8 @@ if(request.getParameter("process") != null)
 	PortalRoleDbLoader portalRoleLoader = (PortalRoleDbLoader)bbPm.getLoader(PortalRoleDbLoader.TYPE);
 	// Create a user loader, for loading users from the database.
 	UserDbLoader userLoader = (UserDbLoader)bbPm.getLoader(UserDbLoader.TYPE);
+	// Create a course loader, for loading all the courses a given user is enrolled in.
+	CourseDbLoader courseLoader = (CourseDbLoader)bbPm.getLoader(CourseDbLoader.TYPE);
 
 	// Load all portal roles once to avoid redundancy with calls to getPortalRoleByName().
 	List<PortalRole> portalRoles = portalRoleLoader.loadAll();
@@ -266,11 +269,20 @@ if(request.getParameter("process") != null)
 	// Find the staff portal role.
 	PortalRole staffPortalRole = getPortalRoleByName(portalRoles, "Staff");
 
+	// Find out who the user is.
+	User currentUser = ctx.getUser();
 	// Find the current user's portal role.
-	Id currentUserPortalRoleId = ctx.getUser().getPortalRoleId();
+	Id currentUserPortalRoleId = currentUser.getPortalRoleId();
 	// Should we show them potentially sensitive information?
 	// (Only if the current user is a member of staff/faculty.)
 	boolean displayPrivilegedInformation = currentUserPortalRoleId.equals(facultyPortalRole.getId()) || currentUserPortalRoleId.equals(staffPortalRole.getId());
+
+	// Guess what the current term is, and store its string representation.
+	// The format is <year> + ("09" if the term is fall, "02" if the term is spring).
+	Calendar calendar = Calendar.getInstance();
+	String year = Integer.toString(calendar.get(Calendar.YEAR));
+	String month = calendar.get(Calendar.MONTH) <= 6 ? "02" : "09";
+	String currentTermString = year + month;
 
 	// Which portal roles does the user want to see?
 	Id validPortalRoleIdOne = null;
@@ -360,7 +372,7 @@ if(request.getParameter("process") != null)
 		{
 			out.println("student(s)");
 		}
-		else if(searchRole.equals("faculty staff"))
+		else if(searchRole.equals("facultystaff"))
 		{
 			out.println("faculty/staff");
 		}
@@ -398,18 +410,73 @@ if(request.getParameter("process") != null)
 						out.print("Email: " + user.getUserName() + "@oberlin.edu <br><br>");
 						out.print("Username: " + user.getUserName());
 					} %><br><br>
-					<% if(displayPrivilegedInformation && !user.getDepartment().equals("")) //major
+					<% String userDepartment = user.getDepartment();
+					if(searchRole.equals("student") && displayPrivilegedInformation && !userDepartment.equals("")) //major
 					{
-						out.print(user.getDepartment());
+						out.print("Major: " + userDepartment);
+					}
+					else if(searchRole.equals("facultystaff") && !userDepartment.equals(""))
+					{
+						out.println("Department: " + userDepartment);
 					} %><br><br>
+					<%-- <% if(searchRole.equals("facultystaff"))
+					{ %>
+						<form action="https://conevals.csr.oberlin.edu/view.php" method="post" id="appointment_form<%=user.getUserName()%>">
+							<input type="hidden" name="username" value="<%=currentUser.getUserName()%>">
+							<input type="hidden" name="instructor" value="<%=user.getUserName()%>">
+							<input type="hidden" name="name" value="">
+							<input type="hidden" name="email" value="">
+							<input type="hidden" name="course_id" value="">
+							<input type="hidden" name="course_cid" value="">
+							<input type="hidden" name="course_name" value="">
+							<a href="javascript:{}" onclick="document.getElementById('appointment_form<%=user.getUserName()%>').submit();">Click here</a> to schedule an appointment with this instructor.
+						</form>
+					<% } %><br><br> --%>
 					</td>
 					<td width="200" valign="top">
 	<%
-	if(displayPrivilegedInformation)
+	if(displayPrivilegedInformation && searchRole.equals("student"))
 	{
-		for (Course course : CourseDbLoader.Default.getInstance().loadByUserId(user.getId()))
+		String userDean = user.getStudentId();
+		if(!userDean.equals(""))
 		{
-			out.println(course.getTitle() + "<br>");
+			out.println("Class dean: " + userDean.substring(3) + "<br><br>");
+		}
+		List<Course> userOrganizations = courseLoader.loadByUserId(user.getId());
+		if(!userOrganizations.isEmpty())
+		{
+			List<String> userCourses = new ArrayList<String>();
+			List<String> userAdvisors = new ArrayList<String>();
+			for(Course organization : userOrganizations)
+			{
+				String organizationTitle = organization.getTitle();
+				if(organizationTitle.substring(0, 7).equals(currentTermString + " "))
+				{
+					userCourses.add(organizationTitle.substring(7));
+				}
+				else if(organizationTitle.substring(0, 11).equals("Advising - "))
+				{
+					userAdvisors.add(organizationTitle.substring(11));
+				}
+			}
+			if(!userAdvisors.isEmpty())
+			{
+				out.println("Advisor(s):");
+				for(int i = 0; i < userAdvisors.size() - 1; i++)
+				{
+					out.println(userAdvisors.get(i) + ", ");
+				}
+				out.println(userAdvisors.get(userAdvisors.size() - 1) + "<br>");
+			}
+			if(!userCourses.isEmpty())
+			{
+				out.println("Course(s):<br>");
+				for(String courseName : userCourses)
+				{
+					out.println(courseName + "<br>");
+				}
+				out.println("<br>");
+			}
 		}
 	}
 	%>
