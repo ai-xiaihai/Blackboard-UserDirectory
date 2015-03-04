@@ -251,6 +251,9 @@ if(searchRole == null)
 // Determine whether or not they actually specified a search with another variable, since a blank search term is valid.
 if(request.getParameter("process") != null)
 {
+	// Debugging flag.
+	final boolean DEBUG = false;
+
 	// Create a persistence manager - needed if we want to use loaders or persisters in blackboard.
 	BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
 	// Create a portal role loader, for locating and indentifying the portal roles of users.
@@ -275,7 +278,7 @@ if(request.getParameter("process") != null)
 	Id currentUserPortalRoleId = currentUser.getPortalRoleId();
 	// Should we show them potentially sensitive information?
 	// (Only if the current user is a member of staff/faculty.)
-	boolean displayPrivilegedInformation = currentUserPortalRoleId.equals(facultyPortalRole.getId()) || currentUserPortalRoleId.equals(staffPortalRole.getId());
+	boolean displayPrivilegedInformation = DEBUG || currentUserPortalRoleId.equals(facultyPortalRole.getId()) || currentUserPortalRoleId.equals(staffPortalRole.getId());
 
 	// Guess what the current term is, and store its string representation.
 	// The format is <year> + ("09" if the term is fall, "02" if the term is spring).
@@ -395,7 +398,7 @@ if(request.getParameter("process") != null)
 					<%
 						out.println(user.getFamilyName() + ", ");
 						String userFirstName = user.getGivenName();
-					 	if(!displayPrivilegedInformation && searchRole.equals("student") && userFirstName.contains("("))
+						if(!displayPrivilegedInformation && searchRole.equals("student") && userFirstName.contains("("))
 						{
 							out.print(userFirstName.substring(0, userFirstName.indexOf('(') - 1));
 						}
@@ -405,21 +408,33 @@ if(request.getParameter("process") != null)
 						}
 					%>
 					<br><br></span>
-					<% if(!user.getUserName().equals(""))
+					<% if(!user.getUserName().isEmpty())
 					{
 						out.print("Email: " + user.getUserName() + "@oberlin.edu <br><br>");
 						out.print("Username: " + user.getUserName());
 					} %><br><br>
-					<% String userDepartment = user.getDepartment();
-					if(searchRole.equals("student") && displayPrivilegedInformation && !userDepartment.equals("")) //major
+					<% if(DEBUG)
 					{
-						out.print("Major: " + userDepartment);
-					}
-					else if(searchRole.equals("facultystaff") && !userDepartment.equals(""))
-					{
-						out.println("Department: " + userDepartment);
+						// If the user is a student, this should be their major.
+						// If not, it should be their department.
+						String userDepartment = user.getDepartment();
+						if(!userDepartment.isEmpty())
+						{
+							if(searchRole.equals("student") && displayPrivilegedInformation)
+							{
+								out.print("Major: " + userDepartment);
+							}
+							else if(searchRole.equals("facultystaff"))
+							{
+								out.println("Department: " + userDepartment);
+							}
+						}
+						else
+						{
+							out.println("This user has no department.");
+						}
 					} %><br><br>
-					<%-- <% if(searchRole.equals("facultystaff"))
+					<% if(DEBUG && searchRole.equals("facultystaff"))
 					{ %>
 						<form action="https://conevals.csr.oberlin.edu/view.php" method="post" id="appointment_form<%=user.getUserName()%>">
 							<input type="hidden" name="username" value="<%=currentUser.getUserName()%>">
@@ -431,51 +446,90 @@ if(request.getParameter("process") != null)
 							<input type="hidden" name="course_name" value="">
 							<a href="javascript:{}" onclick="document.getElementById('appointment_form<%=user.getUserName()%>').submit();">Click here</a> to schedule an appointment with this instructor.
 						</form>
-					<% } %><br><br> --%>
+					<% } %><br><br>
 					</td>
 					<td width="200" valign="top">
 	<%
 	if(displayPrivilegedInformation && searchRole.equals("student"))
 	{
 		String userDean = user.getStudentId();
-		if(!userDean.equals(""))
+		out.println("Class dean:");
+		if(!userDean.isEmpty())
 		{
-			out.println("Class dean: " + userDean.substring(3) + "<br><br>");
+			out.println(userDean.substring(3));
 		}
+		else
+		{
+			out.println("None listed");
+		}
+		out.println("<br><br>");
+
 		List<Course> userOrganizations = courseLoader.loadByUserId(user.getId());
 		if(!userOrganizations.isEmpty())
 		{
 			List<String> userCourses = new ArrayList<String>();
 			List<String> userAdvisors = new ArrayList<String>();
+			List<String> debugOrganizations = new ArrayList<String>();
 			for(Course organization : userOrganizations)
 			{
 				String organizationTitle = organization.getTitle();
-				if(organizationTitle.substring(0, 7).equals(currentTermString + " "))
+				if(organizationTitle.length() >= 7 && organizationTitle.substring(0, 7).equals(currentTermString + " "))
 				{
 					userCourses.add(organizationTitle.substring(7));
 				}
-				else if(organizationTitle.substring(0, 11).equals("Advising - "))
+				else if(organizationTitle.length() >= 11 && organizationTitle.substring(0, 11).equals("Advising - "))
 				{
 					userAdvisors.add(organizationTitle.substring(11));
 				}
+				else if(DEBUG)
+				{
+					debugOrganizations.add(organizationTitle);
+				}
 			}
+
+			out.println("Advisor(s):");
 			if(!userAdvisors.isEmpty())
 			{
-				out.println("Advisor(s):");
 				for(int i = 0; i < userAdvisors.size() - 1; i++)
 				{
 					out.println(userAdvisors.get(i) + ", ");
 				}
-				out.println(userAdvisors.get(userAdvisors.size() - 1) + "<br>");
+				out.println(userAdvisors.get(userAdvisors.size() - 1));
 			}
+			else
+			{
+				out.println("None listed");
+			}
+			out.println("<br><br>");
+
+			out.println("Course(s):");
 			if(!userCourses.isEmpty())
 			{
-				out.println("Course(s):<br>");
 				for(String courseName : userCourses)
 				{
-					out.println(courseName + "<br>");
+					out.println("<br>" + courseName);
 				}
-				out.println("<br>");
+			}
+			else
+			{
+				out.println("None listed");
+			}
+			out.println("<br><br>");
+
+			if(DEBUG)
+			{
+				out.println("DEBUG ORGANIZATIONS:");
+				if(!debugOrganizations.isEmpty())
+				{
+					for(String debugName : debugOrganizations)
+					{
+						out.println("<br>" + debugName);
+					}
+				}
+				else
+				{
+					out.println("None found");
+				}
 			}
 		}
 	}
