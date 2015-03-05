@@ -407,10 +407,19 @@ if(request.getParameter("process") != null)
 							out.print(userFirstName);
 						}
 						String userUserName = user.getUserName();
+					%></span>
+					<% if(searchRole.equals("facultystaff"))
+						{
+							out.println("<br>");
+							String userTitle = user.getCompany();
+							if(!userTitle.isEmpty())
+							{
+								out.println(userTitle);
+							}
+						}
 					%>
-					<br><br></span>
-					Email: <%=userUserName%>@oberlin.edu <br><br>
-					Username: <%=userUserName%>
+					<br><br>
+					Email: <%=userUserName%>@oberlin.edu
 					</td>
 					<td width="200" valign="middle">
 					<% String userDepartment = user.getDepartment();
@@ -445,8 +454,34 @@ if(request.getParameter("process") != null)
 					}
 					out.println("<br><br>");
 
-					if(DEBUG && searchRole.equals("facultystaff"))
-					{ %>
+					if(searchRole.equals("facultystaff"))
+					{
+						String userOffice = user.getJobTitle();
+						out.println("Office location: ");
+						if(!userOffice.isEmpty())
+						{
+							out.println(userOffice);
+						}
+						else
+						{
+							out.println("None listed");
+						}
+						out.println("<br><br>");
+
+						String userPhone = user.getBusinessPhone1();
+						out.println("Phone number: ");
+						if(!userPhone.isEmpty())
+						{
+							out.println(userPhone);
+						}
+						else
+						{
+							out.println("None listed");
+						}
+
+						if(DEBUG)
+						{ %>
+						<br><br>
 						<form action="https://conevals.csr.oberlin.edu/view.php" method="post" id="appointment_form<%=user.getUserName()%>">
 							<input type="hidden" name="username" value="<%=currentUser.getUserName()%>">
 							<input type="hidden" name="instructor" value="<%=user.getUserName()%>">
@@ -457,7 +492,8 @@ if(request.getParameter("process") != null)
 							<input type="hidden" name="course_name" value="">
 							<a href="javascript:{}" onclick="document.getElementById('appointment_form<%=user.getUserName()%>').submit();">Click here</a> to schedule an appointment with this instructor.
 						</form>
-					<% }
+						<% }
+					}
 					else if(searchRole.equals("student") && displayPrivilegedInformation)
 					{
 						String userDean = user.getStudentId();
