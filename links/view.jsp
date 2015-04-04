@@ -80,7 +80,7 @@ else if(!(currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
 }
 %>
 <head>
-<link rel="stylesheet" type="text/css" href="dept_css.css">
+<link rel="stylesheet" type="text/css" href="../css/view.css">
 <script>
 	window.onload = function() { document.getElementById("searchtermelement").focus(); }
 	function imageError(image)
@@ -409,7 +409,7 @@ String searchRole = request.getParameter("searchrole");
 if(searchRole == null) searchRole = "student";
 %>
 
-<form action="userDir.jsp" method="post">
+<form action="view.jsp" method="post">
 <input id="searchtermelement" name="searchterm" type="text" size="40" value="<%=searchTerm%>">
 <bbUI:button type="INLINE" name="search" alt="Search" action="SUBMIT_FORM"></bbUI:button>
 <input name="process" type="hidden" id="process" value="1">
