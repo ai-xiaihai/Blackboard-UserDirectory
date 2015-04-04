@@ -19,14 +19,13 @@
       <remove value="admin/remove.jsp"/>
     </http-actions>
 
-
     <!-- Tools defined by this extension -->
     <application-defs>
       <application handle="userdir" type="system" use-ssl="false" name="Profile" can-allow-guest="true"
        small-icon="" large-icon="">
         <description lang="en_US">Application installed as part of the OCTET plugin.</description>
         <links>
-		   <link>
+	  <link>
             <type value="user_tool"/>
             <name value="OCTET User Directory"/>
             <url value="links/userDir.jsp"/>
@@ -35,17 +34,15 @@
               <listitem value="images/icon.gif"/>
             </icons>
           </link>
-          </links>
+        </links>
       </application>
-   </application-defs>
-
+    </application-defs>
 
     <!-- code permissions required for proper operation -->
     <permissions>
       <permission type="persist" name="Content" actions="create,modify,delete"/>
       <permission type="attribute" name="user.authinfo" actions="get"/>
-	  <permission type="attribute" name="user.personalinfo" actions="get,set" />
+      <permission type="attribute" name="user.personalinfo" actions="get,set" />
     </permissions>
   </plugin>
-
 </manifest>
