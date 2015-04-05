@@ -104,7 +104,8 @@ ul {
 		font-family: Verdana, Arial, Helvetica, sans-serif;
 		font-size: 12px;
 		font-weight: bold;
-		color: #FFFFFF;}
+		color: #FFFFFF;
+}
 .breadcrumb_my {
 		color: #006699;
 		font-family: Verdana, Arial, Helvetica, sans-serif;
@@ -118,6 +119,10 @@ ul {
 	display: none;
 }
 .loadingmessage {
+	font-size: 2.0em;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-weight: bold;
+
 	animation-name: loadinganimation;
 	animation-duration: 0.666s;
 	animation-iteration-count: infinite;

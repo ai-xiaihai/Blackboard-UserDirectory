@@ -121,7 +121,7 @@ public static String singleQuote(String string) { return "'" + string + "'"; }
 // Marginally better than hard-coding.
 public static String getUserPicture(String userName)
 {
-    return "http://octet1.csr.oberlin.edu/octet/Bb/Photos/expo/" + userName + "/profileImage";
+    return "https://octet1.csr.oberlin.edu/octet/Bb/Photos/expo/" + userName + "/profileImage";
 }
 
 // If the user has a preferred name, their first (given) name will be in the format

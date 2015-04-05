@@ -86,11 +86,22 @@ else if(!(currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
 	window.onload = function()
 					{
 						document.getElementById("searchterm").focus();
-						document.onkeypress= function() { searchOnEnter(event); };
+						document.onkeypress = function() { searchOnEnter(event); };
+						<%
+						String searchTerm = request.getParameter("searchterm");
+						String searchCriteria = request.getParameter("searchcriteria");
+						String searchRole = request.getParameter("searchrole");
+						if(searchTerm != null && searchCriteria != null && searchRole != null)
+						{
+							String initialSearchData = "searchterm=" + searchTerm +
+													   "&searchcriteria=" + searchCriteria +
+													   "&searchrole=" + searchRole;
+							out.println("loadAJAX('search.jsp', searchUpdate, '" + escape(initialSearchData) + "');");
+						} %>
 					}
 	function imageError(image)
 	{
-		image.src = "http://octet1.csr.oberlin.edu/octet/Bb/Faculty/img/noimage.jpg";
+		image.src = "https://octet1.csr.oberlin.edu/octet/Bb/Faculty/img/noimage.jpg";
 		image.onError = null;
 	}
 	function mouseOverImage(image, newImage)
@@ -131,16 +142,16 @@ else if(!(currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
 	{
 		if(xmlhttp.status == 404)
 		{
-			document.getElementById("loadingsearch").innerHTML = "";
+			document.getElementById("loadingsearch").innerHTML = "<br />";
 			alert("Something went wrong! We couldn't communicate with our server. Please let the OCTET office know if this was unexpected.");
 		}
 		else if(xmlhttp.readyState < 4)
 		{
-			document.getElementById("loadingsearch").innerHTML = '<span class="style7">Loading...</span>';
+			document.getElementById("loadingsearch").innerHTML = 'Loading...';
 		}
 		else
 		{
-			document.getElementById("loadingsearch").innerHTML = "";
+			document.getElementById("loadingsearch").innerHTML = "<br />";
 			document.getElementById("searchresults").innerHTML = xmlhttp.responseText;
 		}
 	}
@@ -178,25 +189,11 @@ else if(!(currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
 			if(portalRole.getRoleName().equals(roleName)) return portalRole;
 		return null;
 	}
-%>
 
-<%
-/* This is the entry point for the user directory.
- * The user directory allows users in blackboard to search for students, faculty, and staff by last name, first name, and user name.
- * If a student searches for other students, only names, emails, and photos are displayed.
- */
-
-// What text did they ask to search for?
-String searchTerm = request.getParameter("searchterm");
-if(searchTerm == null) searchTerm = "";
-
-// How do they want to search--first name, last name, or user name? Defaults to last name.
-String searchCriteria = request.getParameter("searchcriteria");
-if(searchCriteria == null) searchCriteria = "last";
-
-// What kind of user are they searching for--student or faculty/staff? Defaults to student.
-String searchRole = request.getParameter("searchrole");
-if(searchRole == null) searchRole = "student";
+	public static String escape(String string)
+	{
+		return string.replace("'", "\\'");
+	}
 %>
 
 <input id="searchterm" type="text" name="searchterm" size="40" autocomplete="on" placeholder="Enter your search here..." autofocus/>
@@ -213,7 +210,8 @@ if(searchRole == null) searchRole = "student";
 	<label><input id="facultystaffrole" type="radio" name="searchrole" value="facultystaff" />Faculty/Staff</label>
 	<br />
 </span>
-<div id="loadingsearch" class="loadingmessage"></div>
+<br />
+<div id="loadingsearch" class="loadingmessage"><br /></div>
 <br />
 <div id="searchresults"></div>
 </bbUI:docTemplate>
