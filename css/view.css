@@ -27,14 +27,14 @@ body {
 	font-size: 10px;
 	text-decoration: underline;
 }
-li {
+/*li {
 	list-style-image: url(images/bullet.png);
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 11px;
 	color: #000000;
 	list-style-position: outside;
 	clip: rect(auto,auto,auto,auto);
-}
+}*/
 .smallheader {font-size: 14px; font-weight: bold; color: #720000; font-family: Verdana, Arial, Helvetica, sans-serif; }
 a {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
@@ -114,6 +114,27 @@ ul {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 10px;
 }
-div.preload {
+.preload {
 	display: none;
+}
+.loadingmessage {
+	animation-name: loadinganimation;
+	animation-duration: 0.666s;
+	animation-iteration-count: infinite;
+	animation-timing-function: ease-in-out;
+	animation-direction: alternate;
+
+	-webkit-animation-name: loadinganimation;
+	-webkit-animation-duration: 0.666s;
+	-webkit-animation-iteration-count: infinite;
+	-webkit-animation-timing-function: ease-in-out;
+	-webkit-animation-direction: alternate;
+}
+@-webkit-keyframes loadinganimation {
+	from {color: #FFFFFF;}
+	to {color: #000000;}
+}
+@keyframes loadinganimation {
+	from {color: #FFFFFF;}
+	to {color: #000000;}
 }
