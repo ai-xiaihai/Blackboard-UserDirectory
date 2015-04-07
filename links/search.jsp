@@ -492,7 +492,7 @@ else if(searchRole.equals("facultystaff"))
     out.print(" faculty/staff");
 %> located.<br>
 </span>
-<bbUI:list collection="<%=userList%>" collectionLabel="Users" objectId="user" className="User" sortUrl="">
+<bbUI:list collection="<%=userList%>" collectionLabel="Users" objectId="user" className="User" resultsPerPage="-1" sortUrl="">
     <bbUI:listElement width="" label="User Information" href="">
         <table><tr>
             <%=userImageCode(user, imageEasterEggs, audioEasterEggs)%>
