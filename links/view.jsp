@@ -17,168 +17,6 @@
 				blackboard.platform.plugin.PlugInUtil"
         errorPage="/error.jsp"
 %>
-<%@ taglib uri="/bbData" prefix="bbData"%>
-<%@ taglib uri="/bbUI" prefix="bbUI"%>
-<bbData:context id="ctx">
-<bbUI:docTemplate title="OCTET User Directory">
-<bbUI:breadcrumbBar environment="PORTAL">
-	<bbUI:breadcrumb href="https://blackboard.oberlin.edu/">Click here to return to Blackboard</bbUI:breadcrumb>
-	<bbUI:breadcrumb>OCTET User Directory</bbUI:breadcrumb>
-</bbUI:breadcrumbBar>
-<bbUI:titleBar iconUrl="/images/ci/icons/user_u.gif">OCTET User Directory</bbUI:titleBar>
-<%
-// Debugging flag for simulating the view of faculty/staff
-final boolean DEBUG = false;
-// Appointment tool
-final boolean APPOINTMENTS = false;
-
-// Create a persistence manager - needed if we want to use loaders or persisters in blackboard.
-BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
-// Create a portal role loader, for locating and indentifying the portal roles of users.
-PortalRoleDbLoader portalRoleLoader = (PortalRoleDbLoader)bbPm.getLoader(PortalRoleDbLoader.TYPE);
-
-// Load all portal roles once to avoid redundancy with calls to getPortalRoleByName().
-List<PortalRole> portalRoles = portalRoleLoader.loadAll();
-// Find the student portal role.
-PortalRole studentPortalRole = getPortalRoleByName(portalRoles, "Student");
-// Find the faculty portal role.
-PortalRole facultyPortalRole = getPortalRoleByName(portalRoles, "Faculty");
-// Find the staff portal role.
-PortalRole staffPortalRole = getPortalRoleByName(portalRoles, "Staff");
-// Find the emeriti portal role.
-PortalRole emeritiPortalRole = getPortalRoleByName(portalRoles, "Emeriti");
-// Find the alumni portal role.
-PortalRole alumniPortalRole = getPortalRoleByName(portalRoles, "Alumni");
-// Find the guest portal role.
-PortalRole guestPortalRole = getPortalRoleByName(portalRoles, "Guest");
-
-// Find out who the user is.
-User currentUser = ctx.getUser();
-// Find the current user's portal role.
-Id currentUserPortalRoleId = currentUser.getPortalRoleId();
-// Should we show them potentially sensitive information?
-boolean displayPrivilegedInformation = DEBUG;
-if(!ctx.getSession().isAuthenticated() ||
-	currentUserPortalRoleId.equals(guestPortalRole.getId()))
-{ %>
-	<div>You must be logged in to use this tool.</div>
-<% return;
-}
-// If they are a member of faculty or staff, we do
-else if(currentUserPortalRoleId.equals(facultyPortalRole.getId()) ||
-		currentUserPortalRoleId.equals(staffPortalRole.getId()))
-{
-	displayPrivilegedInformation = true;
-}
-// If they are not a student, alumnus, or faculty/emeriti, block access
-else if(!(currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
-		  currentUserPortalRoleId.equals(emeritiPortalRole.getId()) ||
-		  currentUserPortalRoleId.equals(alumniPortalRole.getId())))
-{ %>
-	<div>In order to use this tool, you must be a student, alumnus, staff member, emeritus, or faculty member.</div>
-<% return;
-}
-%>
-<head>
-<link rel="stylesheet" type="text/css" href="../css/view.css">
-<script>
-	var xmlhttp = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
-	window.onload = function()
-					{
-						document.getElementById("searchterm").focus();
-						document.onkeypress = function() { searchOnEnter(event); };
-						<%
-						String searchTerm = request.getParameter("searchterm");
-						String searchCriteria = request.getParameter("searchcriteria");
-						String searchRole = request.getParameter("searchrole");
-						if(searchTerm != null && searchCriteria != null && searchRole != null)
-						{
-							String initialSearchData = "searchterm=" + searchTerm +
-													   "&searchcriteria=" + searchCriteria +
-													   "&searchrole=" + searchRole;
-							out.println("loadAJAX('search.jsp', searchUpdate, '" + escape(initialSearchData) + "');");
-						} %>
-					}
-	function imageError(image)
-	{
-		image.src = "https://octet1.csr.oberlin.edu/octet/Bb/Faculty/img/noimage.jpg";
-		image.onError = null;
-	}
-	function mouseOverImage(image, newImage)
-	{
-		var height = image.clientHeight;
-		image.src = newImage;
-		image.style.height = height;
-	}
-	function mouseOutImage(image, newImage) { image.src = newImage; }
-	function mouseOverAudio(user) { document.getElementById(user + '_audio').play(); }
-	function mouseOutAudio(user) { document.getElementById(user + '_audio').pause(); }
-	function mouseOverBoth(image, newImage, user)
-	{
-		mouseOverImage(image, newImage);
-		mouseOverAudio(user);
-	}
-	function mouseOutBoth(image, newImage, user)
-	{
-		mouseOutImage(image, newImage);
-		mouseOutAudio(user);
-	}
-	function loadAJAX(fileLocation, updateFunction, postData)
-	{
-		xmlhttp.onreadystatechange = updateFunction;
-		xmlhttp.open("POST", fileLocation, true);
-		xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-		xmlhttp.send(postData);
-	}
-	function searchOnEnter(event)
-	{
-		if(event.keyCode == 13)
-		{
-			loadAJAX('search.jsp', searchUpdate, getSearchData());
-			document.activeElement.blur();
-		}
-	}
-	function searchUpdate()
-	{
-		if(xmlhttp.status == 404)
-		{
-			document.getElementById("loadingsearch").innerHTML = "<br />";
-			alert("Something went wrong! We couldn't communicate with our server. Please let the OCTET office know if this was unexpected.");
-		}
-		else if(xmlhttp.readyState < 4)
-		{
-			document.getElementById("loadingsearch").innerHTML = 'Loading...';
-		}
-		else
-		{
-			document.getElementById("loadingsearch").innerHTML = "<br />";
-			document.getElementById("searchresults").innerHTML = xmlhttp.responseText;
-		}
-	}
-	function getSearchData()
-	{
-		var result = "";
-
-		result += "searchterm=" + document.getElementById("searchterm").value;
-
-		result += "&searchcriteria=";
-		if(document.getElementById("firstname").checked)
-			result += document.getElementById("firstname").value;
-		else if(document.getElementById("lastname").checked)
-			result += document.getElementById("lastname").value;
-		else if(document.getElementById("username").checked)
-			result += document.getElementById("username").value;
-
-		result += "&searchrole=";
-		if(document.getElementById("studentrole").checked)
-			result += document.getElementById("studentrole").value;
-		else if(document.getElementById("facultystaffrole").checked)
-			result += document.getElementById("facultystaffrole").value;
-
-		return result;
-	}
-</script>
-</head>
 
 <%!
 	// Take in some iterable data structure of PortalRoles and see if any of them return roleName from their getRoleName method.
@@ -189,14 +27,71 @@ else if(!(currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
 			if(portalRole.getRoleName().equals(roleName)) return portalRole;
 		return null;
 	}
-
-	public static String escape(String string)
-	{
-		return string.replace("'", "\\'");
-	}
+	public static String escape(String string) { return string.replace("'", "\\'"); }
 %>
 
-<input id="searchterm" type="text" name="searchterm" size="40" autocomplete="on" placeholder="Enter your search here..." autofocus/>
+<%@ taglib uri="/bbData" prefix="bbData"%>
+<%@ taglib uri="/bbUI" prefix="bbUI"%>
+<bbData:context id="ctx">
+<bbUI:breadcrumbBar environment="PORTAL">
+	<bbUI:breadcrumb href="https://blackboard.oberlin.edu/">Click here to return to Blackboard</bbUI:breadcrumb>
+	<bbUI:breadcrumb>OCTET User Directory</bbUI:breadcrumb>
+</bbUI:breadcrumbBar>
+<bbUI:titleBar iconUrl="/images/ci/icons/user_u.gif">OCTET User Directory</bbUI:titleBar>
+<%
+	// Create a persistence manager - needed if we want to use loaders or persisters in blackboard.
+	BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+	// Create a portal role loader, for locating and indentifying the portal roles of users.
+	PortalRoleDbLoader portalRoleLoader = (PortalRoleDbLoader)bbPm.getLoader(PortalRoleDbLoader.TYPE);
+
+	// Load all portal roles once to avoid redundancy with calls to getPortalRoleByName().
+	List<PortalRole> portalRoles = portalRoleLoader.loadAll();
+	// Find the student portal role.
+	PortalRole studentPortalRole = getPortalRoleByName(portalRoles, "Student");
+	// Find the faculty portal role.
+	PortalRole facultyPortalRole = getPortalRoleByName(portalRoles, "Faculty");
+	// Find the staff portal role.
+	PortalRole staffPortalRole = getPortalRoleByName(portalRoles, "Staff");
+	// Find the emeriti portal role.
+	PortalRole emeritiPortalRole = getPortalRoleByName(portalRoles, "Emeriti");
+	// Find the alumni portal role.
+	PortalRole alumniPortalRole = getPortalRoleByName(portalRoles, "Alumni");
+	// Find the non-Obie portal role.
+	PortalRole nonObiePortalRole = getPortalRoleByName(portalRoles, "Non Obie");
+	// Find the guest portal role.
+	PortalRole guestPortalRole = getPortalRoleByName(portalRoles, "Guest");
+
+	// Find out who the user is.
+	User currentUser = ctx.getUser();
+	// Find the current user's portal role.
+	Id currentUserPortalRoleId = currentUser.getPortalRoleId();
+	// Make sure they're logged in.
+	if(!ctx.getSession().isAuthenticated() ||
+		currentUserPortalRoleId.equals(guestPortalRole.getId()))
+	{
+		out.print("<div>You must be logged in to use this tool.</div>");
+		return;
+	}
+	// If they are not a student, alumnus, or faculty/emeriti, block access.
+	else if(!(currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
+			  currentUserPortalRoleId.equals(emeritiPortalRole.getId()) ||
+			  currentUserPortalRoleId.equals(alumniPortalRole.getId())  ||
+			  currentUserPortalRoleId.equals(nonObiePortalRole.getId())))
+	{
+		out.println("<div>In order to use this tool, you must be a student, alumnus, staff member, emeritus, or faculty member.</div>");
+		return;
+	}
+	String searchTerm = request.getParameter("searchterm");
+	String searchCriteria = request.getParameter("searchcriteria");
+	String searchRole = request.getParameter("searchrole");
+%>
+
+<bbUI:docTemplateHead title="OCTET User Directory">
+<link rel="stylesheet" type="text/css" href="../css/view.css">
+<script src="../js/view.js"></script>
+</bbUI:docTemplateHead>
+
+<input id="searchterm" type="text" name="searchterm" size="40" autocomplete="on" placeholder="Enter your search here..." <%if(searchTerm != null) out.print("value=\"" + searchTerm + "\"");%> autofocus/>
 <input type="button" onclick="loadAJAX('search.jsp', searchUpdate, getSearchData());" value="Search" />
 <br />
 <span class="style1">Search by:
@@ -214,5 +109,12 @@ else if(!(currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
 <div id="loadingsearch" class="loadingmessage"><br /></div>
 <br />
 <div id="searchresults"></div>
-</bbUI:docTemplate>
+<%
+	if(searchTerm != null && searchCriteria != null && searchRole != null)
+	{
+		String initialSearchData = "searchterm=" + searchTerm +
+								   "&searchcriteria=" + searchCriteria +
+								   "&searchrole=" + searchRole;
+		out.println("<script>loadAJAX('search.jsp', searchUpdate, '" + escape(initialSearchData) + "');</script>");
+	} %>
 </bbData:context>
