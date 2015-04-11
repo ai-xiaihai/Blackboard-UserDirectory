@@ -2,9 +2,9 @@
 <manifest>
   <!-- core extension information -->
   <plugin>
-    <name value= "TEMP OCTET User Directory"/>
-    <handle value= "temporary"/>
-    <description value= "TEMP OCTET User Directory Plugin."/>
+    <name value= "OCTET User Directory"/>
+    <handle value= "octetusrdir"/>
+    <description value= "Search for users on Blackboard."/>
     <version value= "1.0.0.1"/>
     <requires>
     	<bbversion value="9.1.0"/>
@@ -19,17 +19,18 @@
       <remove value="admin/remove.jsp"/>
     </http-actions>
 
+
     <!-- Tools defined by this extension -->
     <application-defs>
-      <application handle="temporary" type="system" use-ssl="false" name="Profile" can-allow-guest="true"
+      <application handle="userdir" type="system" use-ssl="false" name="Profile" can-allow-guest="true"
        small-icon="" large-icon="">
         <description lang="en_US">Application installed as part of the OCTET plugin.</description>
         <links>
-	  <link>
+	      <link>
             <type value="user_tool"/>
-            <name value="TEMP OCTET User Directory"/>
+            <name value="OCTET User Directory"/>
             <url value="links/view.jsp"/>
-            <description value="User Directory with built-in search." />
+            <description value="TEMP OCTET User Directory." />
             <icons>
               <listitem value="images/icon.gif"/>
             </icons>
@@ -40,9 +41,10 @@
 
     <!-- code permissions required for proper operation -->
     <permissions>
+      <permission type="socket" name="*" actions="connect"/>
       <permission type="persist" name="Content" actions="create,modify,delete"/>
       <permission type="attribute" name="user.authinfo" actions="get"/>
-      <permission type="attribute" name="user.personalinfo" actions="get,set" />
+	  <permission type="attribute" name="user.personalinfo" actions="get,set" />
     </permissions>
   </plugin>
 </manifest>

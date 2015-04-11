@@ -1,20 +1,21 @@
 <%@ page import="java.util.*,
-                java.text.SimpleDateFormat,
-                blackboard.admin.data.user.*,
-                blackboard.admin.data.IAdminObject,
-                blackboard.admin.persist.user.*,
-                blackboard.base.*,
-                blackboard.data.*,
-                blackboard.data.user.*,
-                blackboard.data.course.*,
-                blackboard.data.role.*,
-                blackboard.persist.*,
-                blackboard.persist.user.*,
-                blackboard.persist.role.*,
-                blackboard.persist.course.*,
-                blackboard.platform.*,
-                blackboard.platform.persistence.*,
-                blackboard.platform.plugin.PlugInUtil"
+                 java.net.URL,
+                 java.text.SimpleDateFormat,
+                 blackboard.admin.data.user.*,
+                 blackboard.admin.data.IAdminObject,
+                 blackboard.admin.persist.user.*,
+                 blackboard.base.*,
+                 blackboard.data.*,
+                 blackboard.data.user.*,
+                 blackboard.data.course.*,
+                 blackboard.data.role.*,
+                 blackboard.persist.*,
+                 blackboard.persist.user.*,
+                 blackboard.persist.role.*,
+                 blackboard.persist.course.*,
+                 blackboard.platform.*,
+                 blackboard.platform.persistence.*,
+                 blackboard.platform.plugin.PlugInUtil"
         errorPage="/error.jsp"
 %>
 <%@ taglib uri="/bbData" prefix="bbData"%>
@@ -145,38 +146,52 @@ public static String getPreferredName(String firstName)
     else return firstName;
 }
 
-// For the lulz.
+/* For the lulz. */
+
 // Mappings are username : image URL.
-public static HashMap<String, String> getImageEasterEggs(long pokemon)
+public static HashMap<String, String> getImageEasterEggs()
 {
-    HashMap<String, String> result = new HashMap<String, String>();
-    String imageFolder = "https://oberlintest.blackboard.com" + PlugInUtil.getUri("octt", "octetuserd", "images/");
+    try
+    {
+        HashMap<String, String> result = new HashMap<String, String>();
+        URL fileURL = new URL("https://occs.cs.oberlin.edu/~cegerton/hfti.php");
+        Scanner fileReader = new Scanner(fileURL.openStream());
 
-    if(Math.random() >= 0.99) pokemon += 151;
+        while(fileReader.hasNext())
+            result.put(fileReader.next(), fileReader.next());
 
-    result.put("cegerton",	imageFolder + "eduard.jpg");
-    result.put("mkrislov",	imageFolder + "marvin.jpg");
-    result.put("cmohler",	imageFolder + "batman.jpg");
-    result.put("bkuperma",	imageFolder + "superman.jpg");
-    result.put("mcohn2",	imageFolder + "maury.gif");
-    result.put("ayang",		imageFolder + "Pokemon/" + String.valueOf(pokemon) + ".png");
-
-    return result;
+        fileReader.close();
+        return result;
+    }
+    catch(Exception e)
+    {
+        return new HashMap<String, String>();
+    }
 }
 
 // Mappings are username : audio easter egg
-public static HashMap<String, AudioEasterEgg> getAudioEasterEggs(long pokemon)
+public static HashMap<String, AudioEasterEgg> getAudioEasterEggs()
 {
-    HashMap<String, AudioEasterEgg> result = new HashMap<String, AudioEasterEgg>();
-    String audioFolder = "https://oberlintest.blackboard.com" + PlugInUtil.getUri("octt", "octetuserd", "audio/");
+    try
+    {
+        HashMap<String, AudioEasterEgg> result = new HashMap<String, AudioEasterEgg>();
+        URL fileURL = new URL("https://occs.cs.oberlin.edu/~cegerton/hfta.php");
+        Scanner fileReader = new Scanner(fileURL.openStream());
 
-    result.put("cegerton",	new AudioEasterEgg("cegerton", audioFolder + "trololololol", true, true));
-    result.put("ldaligau",	new AudioEasterEgg("ldaligau", audioFolder + "rickroll", true, true));
-    result.put("cmohler",	new AudioEasterEgg("cmohler", audioFolder + "batman", true, true));
-    result.put("bkuperma",	new AudioEasterEgg("bkuperma", audioFolder + "superman", true, true));
-    result.put("ayang",		new AudioEasterEgg("ayang", audioFolder + "Pokemon/" + String.valueOf(pokemon), false, false));
+        String userName;
+        while(fileReader.hasNext())
+        {
+            userName = fileReader.next();
+            result.put(userName, new AudioEasterEgg(userName, fileReader.next(), fileReader.nextBoolean(), fileReader.nextBoolean()));
+        }
 
-    return result;
+        fileReader.close();
+        return result;
+    }
+    catch(Exception e)
+    {
+        return new HashMap<String, AudioEasterEgg>();
+    }
 }
 
 public static class AudioEasterEgg
@@ -430,9 +445,8 @@ else if(searchCriteria.equals("user"))
 }
 
 // Teehee
-long pokemon = (System.currentTimeMillis() % 151) + 1;
-HashMap<String, String> imageEasterEggs = getImageEasterEggs(pokemon);
-HashMap<String, AudioEasterEgg> audioEasterEggs = getAudioEasterEggs(pokemon);
+HashMap<String, AudioEasterEgg> audioEasterEggs = getAudioEasterEggs();
+HashMap<String, String> imageEasterEggs = getImageEasterEggs();
 boolean easterEggs = false;
 
 if(userSet.isEmpty() && searchTerm.equalsIgnoreCase(EASTER_EGG_PHRASE))
