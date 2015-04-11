@@ -96,8 +96,10 @@ function getSearchData()
     result += "&searchrole=";
     if(document.getElementById("studentrole").checked)
         result += document.getElementById("studentrole").value;
-    else if(document.getElementById("facultystaffrole").checked)
-        result += document.getElementById("facultystaffrole").value;
+    else if(document.getElementById("facultyrole").checked)
+        result += document.getElementById("facultyrole").value;
+    else if(document.getElementById("staffrole").checked)
+        result += document.getElementById("staffrole").value;
 
     return result;
 }

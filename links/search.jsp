@@ -40,7 +40,7 @@ if(searchTerm == null) return;
 String searchCriteria = request.getParameter("searchcriteria");
 if(searchCriteria == null) return;
 
-// What kind of user are they searching for--student or faculty/staff?
+// What kind of user are they searching for--student, faculty, or staff?
 String searchRole = request.getParameter("searchrole");
 if(searchRole == null) return;
 
@@ -403,15 +403,13 @@ String month = calendar.get(Calendar.MONTH) <= 6 ? "02" : "09";
 String currentTermString = year + month;
 
 // Which portal roles does the user want to see?
-Id validPortalRoleIdOne = null;
-Id validPortalRoleIdTwo = null;
+Id validPortalRoleId = null;
 if(searchRole.equals("student"))
-    validPortalRoleIdOne = studentPortalRole.getId();
-else if(searchRole.equals("facultystaff"))
-{
-    validPortalRoleIdOne = facultyPortalRole.getId();
-    validPortalRoleIdTwo = staffPortalRole.getId();
-}
+    validPortalRoleId = studentPortalRole.getId();
+else if(searchRole.equals("faculty"))
+    validPortalRoleId = facultyPortalRole.getId();
+else if(searchRole.equals("staff"))
+    validPortalRoleId = staffPortalRole.getId();
 
 // We want a list of unique entries, sorted by how closely they resemble the search term.
 TreeSet<User> userSet = null;
@@ -475,7 +473,7 @@ for(User user : userSet)
         // Find out what kind of user (student, faculty, administrator, etc.) they are.
         Id userPortalRoleId = portalRoleLoader.loadPrimaryRoleByUserId(user.getId()).getId();
         // Skip them if they aren't what the user has asked for.
-        if(easterEggs || userPortalRoleId.equals(validPortalRoleIdOne) || userPortalRoleId.equals(validPortalRoleIdTwo))
+        if(easterEggs || userPortalRoleId.equals(validPortalRoleId))
         {
             // Unless a member of faculty/staff is performing the search, filter out
             // name matches based on legal names instead of preferred names.
@@ -486,7 +484,7 @@ for(User user : userSet)
             {
                 continue;
             }
-            // Add the user to our BbList!
+            // Add the user to our BbList.
             userList.add(userLoader.loadById(user.getId()));
 
             // Create the hidden audio elements for anyone who gets one.
@@ -506,8 +504,10 @@ if(easterEggs)
     out.print(" user(s)");
 else if(searchRole.equals("student"))
     out.print(" student(s)");
-else if(searchRole.equals("facultystaff"))
-    out.print(" faculty/staff");
+else if(searchRole.equals("faculty"))
+    out.print(" faculty");
+else if(searchRole.equals("staff"))
+    out.print(" staff");
 %> located.
 </span>
 <span class="pagenumber">
@@ -544,17 +544,17 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
             <%
                 out.print(user.getFamilyName() + ", ");
                 String userFirstName = user.getGivenName();
-                if(!displayPrivilegedInformation && searchRole.equals("student") && userFirstName.contains("("))
-                    out.print(userFirstName.substring(0, userFirstName.indexOf('(') - 1));
+                if(!displayPrivilegedInformation && searchRole.equals("student"))
+                    out.print(getPreferredName(userFirstName));
                 else
                     out.print(userFirstName);
             %></span>
-            <%	if(searchRole.equals("facultystaff"))
+            <%	if(searchRole.equals("faculty") || searchRole.equals("staff"))
                 {
                     String userTitle = user.getCompany();
                     if(!userTitle.isEmpty())
                     { %>
-                        <br><span class="facultytitle"><%=trimQuotes(userTitle)%></span>
+                        <br><span class="positiontitle"><%=trimQuotes(userTitle)%></span>
                     <% }
                 }
                 String userUserName = user.getUserName();
@@ -602,7 +602,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                     userDepartment = "None listed";
                 out.print("Major(s): " + trimQuotes(userDepartment));
             }
-            else if(searchRole.equals("facultystaff"))
+            else if(searchRole.equals("faculty") || searchRole.equals("staff"))
             {
                 if(userDepartment.length() > 5 && userDepartment.substring(0, 5).equals("DEPT-"))
                     userDepartment = userDepartment.substring(5);
@@ -611,7 +611,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                 out.print("Department: " + trimQuotes(userDepartment));
             }
             out.print("<br><br>");
-            if(searchRole.equals("facultystaff"))
+            if(searchRole.equals("faculty") || searchRole.equals("staff"))
             {
                 String userOffice = user.getJobTitle();
                 out.print("Office location: ");
@@ -627,7 +627,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                 else
                     out.print("None listed");
 
-                if(APPOINTMENTS)
+                if(APPOINTMENTS && searchRole.equals("faculty"))
                 { %>
                     <br><br>
                     <form action="https://conevals.csr.oberlin.edu/view.php" method="post" id="appointment_form<%=userUserName%>">

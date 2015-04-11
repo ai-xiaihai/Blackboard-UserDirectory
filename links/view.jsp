@@ -29,7 +29,8 @@
 		initialSearch = true;
 	searchTerm = searchTerm == null ? "" : searchTerm;
 	searchCriteria = searchCriteria == null || searchCriteria.isEmpty() ? "user" : searchCriteria;
-	searchRole = searchRole == null || searchRole.isEmpty() ? "student" : searchRole; %>
+	searchRole = searchRole == null || searchRole.isEmpty() ? "student" : searchRole;
+%>
 
 <bbUI:docTemplateHead title="OCTET User Directory">
 <link rel="stylesheet" type="text/css" href="../css/view.css">
@@ -60,7 +61,8 @@ window.onload = function()
 </div>
 <div class="style1">Search for:
 	<label><input id="studentrole" type="radio" name="searchrole" value="student" <%=searchRole.equals("student") ? "checked" : ""%> />Students</label>
-	<label><input id="facultystaffrole" type="radio" name="searchrole" value="facultystaff" <%=searchRole.equals("facultystaff") ? "checked" : ""%> />Faculty/Staff</label>
+	<label><input id="facultyrole" type="radio" name="searchrole" value="faculty" <%=searchRole.equals("faculty") ? "checked" : ""%> />Faculty</label>
+	<label><input id="staffrole" type="radio" name="searchrole" value="staff" <%=searchRole.equals("staff") ? "checked" : ""%> />Staff</label>
 </div>
 
 <div id="loadingsearch" class="loadingmessage">Loading...<br /></div>
