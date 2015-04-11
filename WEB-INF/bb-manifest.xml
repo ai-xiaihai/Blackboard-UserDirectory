@@ -2,9 +2,9 @@
 <manifest>
   <!-- core extension information -->
   <plugin>
-    <name value= "OCTET User Directory"/>
-    <handle value= "octetuserd"/>
-    <description value= "OCTET User Directory Plugin."/>
+    <name value= "TEMP OCTET User Directory"/>
+    <handle value= "temporary"/>
+    <description value= "TEMP OCTET User Directory Plugin."/>
     <version value= "1.0.0.1"/>
     <requires>
     	<bbversion value="9.1.0"/>
@@ -21,13 +21,13 @@
 
     <!-- Tools defined by this extension -->
     <application-defs>
-      <application handle="userdir" type="system" use-ssl="false" name="Profile" can-allow-guest="true"
+      <application handle="temporary" type="system" use-ssl="false" name="Profile" can-allow-guest="true"
        small-icon="" large-icon="">
         <description lang="en_US">Application installed as part of the OCTET plugin.</description>
         <links>
 	  <link>
             <type value="user_tool"/>
-            <name value="OCTET User Directory"/>
+            <name value="TEMP OCTET User Directory"/>
             <url value="links/view.jsp"/>
             <description value="User Directory with built-in search." />
             <icons>

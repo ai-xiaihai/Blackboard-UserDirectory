@@ -26,6 +26,10 @@
 final boolean DEBUG = true;
 // Appointment tool
 final boolean APPOINTMENTS = false;
+// See all the easter eggs at once
+final String EASTER_EGG_PHRASE = "happy fun times";
+// Number of people per page
+final int PAGE_SIZE = 10;
 
 // What text did they ask to search for?
 String searchTerm = request.getParameter("searchterm");
@@ -418,8 +422,9 @@ else if(searchCriteria.equals("last"))
 else if(searchCriteria.equals("user"))
 {
     if(searchTerm.length() > 8)
-        searchTerm = searchTerm.substring(0, 8);
-    userSet = new TreeSet(new UserNameComparator(searchTerm));
+        userSet = new TreeSet(new UserNameComparator(searchTerm.substring(0, 8)));
+    else
+        userSet = new TreeSet(new UserNameComparator(searchTerm));
     userSearch.setNameParameter(UserSearch.SearchKey.UserName, SearchOperator.Contains, searchTerm);
     userSet.addAll(userLoader.loadByUserSearch(userSearch));
 }
@@ -430,7 +435,7 @@ HashMap<String, String> imageEasterEggs = getImageEasterEggs(pokemon);
 HashMap<String, AudioEasterEgg> audioEasterEggs = getAudioEasterEggs(pokemon);
 boolean easterEggs = false;
 
-if(userSet.isEmpty() && searchTerm.equals("8D"))
+if(userSet.isEmpty() && searchTerm.equalsIgnoreCase(EASTER_EGG_PHRASE))
 {
     // This will find more than one kind of user; best to keep things simple and display the least information.
     searchRole = "student";
@@ -479,22 +484,46 @@ for(User user : userSet)
             if(imageEasterEgg != null) out.print(imageEasterEggCode(imageEasterEgg));
         }
     }
-}
-%>
+} %>
+
 <span class="style7">
-<%
-out.print(userList.size());
+<% out.print(userList.size());
 if(easterEggs)
     out.print(" user(s)");
 else if(searchRole.equals("student"))
     out.print(" student(s)");
 else if(searchRole.equals("facultystaff"))
     out.print(" faculty/staff");
-%> located.<br>
+%> located.
 </span>
-<bbUI:list collection="<%=userList%>" collectionLabel="Users" objectId="user" className="User" resultsPerPage="-1" sortUrl="">
-    <bbUI:listElement width="" label="User Information" href="">
-        <table><tr>
+<span class="pagenumber">
+    <button id="prevpagebutton" onclick="prevPage();" class="pagedirectionbutton" disabled>Prev</button>
+    <span class="style7">Page <span id="currentpage">1</span> of <%=(userList.size() / PAGE_SIZE) + 1%></span>
+    <button id="nextpagebutton" onclick="nextPage();" class="pagedirectionbutton">Next</button>
+</span>
+<br /><br />
+
+<% for(int buttonIndex = 1; ((buttonIndex - 1) * PAGE_SIZE) + 1 <= userList.size(); buttonIndex++)
+{ %>
+    <button id="buttonpage<%=buttonIndex%>" class="pagenumberbutton" onclick="gotoPage(<%=buttonIndex%>);"><%=buttonIndex%></button>
+<% } %>
+<div class="clearfloat"></div>
+<br /><br />
+
+<% if(userList.size() == 0)
+{ %>
+    <div id="resultspage1" class="resultspage" hidden></div>
+    <button id="buttonpage1" class="pagenumberbutton" hidden></button>
+<% }
+
+for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
+{ %>
+    <div id="resultspage<%=pageIndex + 1%>" class="resultspage">
+    <% for(int userIndex = pageIndex * PAGE_SIZE; userIndex < (pageIndex + 1) * PAGE_SIZE && userIndex < userList.size(); userIndex++)
+    {
+        User user = userList.get(userIndex);
+        %>
+        <table class="resultstable"><tr>
             <%=userImageCode(user, imageEasterEggs, audioEasterEggs)%>
             <td width="200" valign="middle">
             <span class="style3">
@@ -665,7 +694,8 @@ else if(searchRole.equals("facultystaff"))
                     out.print("None listed");
             } %>
             </td>
-        </tr></table>
-    </bbUI:listElement>
-</bbUI:list>
+        </tr></table><br />
+    <% } %>
+    </div>
+<% } %>
 </bbData:context>
