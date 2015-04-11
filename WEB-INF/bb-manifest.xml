@@ -30,7 +30,7 @@
             <type value="user_tool"/>
             <name value="OCTET User Directory"/>
             <url value="links/view.jsp"/>
-            <description value="TEMP OCTET User Directory." />
+            <description value="OCTET User Directory." />
             <icons>
               <listitem value="images/icon.gif"/>
             </icons>

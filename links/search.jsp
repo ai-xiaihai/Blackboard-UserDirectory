@@ -540,7 +540,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
         <table class="resultstable"><tr>
             <%=userImageCode(user, imageEasterEggs, audioEasterEggs)%>
             <td width="200" valign="middle">
-            <span class="style3">
+            <span class="userfullname">
             <%
                 out.print(user.getFamilyName() + ", ");
                 String userFirstName = user.getGivenName();
@@ -553,7 +553,9 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                 {
                     String userTitle = user.getCompany();
                     if(!userTitle.isEmpty())
-                        out.print("<br>" + trimQuotes(userTitle));
+                    { %>
+                        <br><span class="facultytitle"><%=trimQuotes(userTitle)%></span>
+                    <% }
                 }
                 String userUserName = user.getUserName();
             %>
