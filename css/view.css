@@ -73,7 +73,7 @@ ul {
 }
 .userfullname {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 11px;
+	font-size: 14px;
 	font-weight: bold;
 	color: #222222;
 }
@@ -144,6 +144,10 @@ ul {
 	display: none;
 }
 .resultstable {
+	height: 165px;
+}
+.resultstable:hover {
+	background: #EEFFEE;
 }
 .clearfloat {
 	clear: both;

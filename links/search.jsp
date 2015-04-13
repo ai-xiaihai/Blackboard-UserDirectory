@@ -311,7 +311,7 @@ public static String userImageCode(User user, HashMap<String, String> imageEaste
 {
     String userName = user.getUserName();
     String userPicture = getUserPicture(userName);
-    String result = "<td width=" + doubleQuote("100") + " valign=" + doubleQuote("middle") + ">\n";
+    String result = "<td width=" + doubleQuote("110") + " valign=" + doubleQuote("middle") + ">\n";
     result += "\t<img src=" + doubleQuote(userPicture) + " width=" + doubleQuote("100") + " onerror=" + doubleQuote("imageError(this)");
     String imageEasterEgg = imageEasterEggs.get(userName);
     AudioEasterEgg audioEasterEgg = audioEasterEggs.get(userName);
@@ -517,13 +517,6 @@ else if(searchRole.equals("staff"))
 </span>
 <br /><br />
 
-<% for(int buttonIndex = 1; ((buttonIndex - 1) * PAGE_SIZE) + 1 <= userList.size(); buttonIndex++)
-{ %>
-    <button id="buttonpage<%=buttonIndex%>" class="pagenumberbutton" onclick="gotoPage(<%=buttonIndex%>);"><%=buttonIndex%></button>
-<% } %>
-<div class="clearfloat"></div>
-<br /><br />
-
 <% if(userList.size() == 0)
 { %>
     <div id="resultspage1" class="resultspage" hidden></div>
@@ -710,8 +703,15 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                     out.print("None listed");
             } %>
             </td>
-        </tr></table><br />
+        </tr></table>
     <% } %>
     </div>
 <% } %>
+<br />
+
+<% for(int buttonIndex = 1; ((buttonIndex - 1) * PAGE_SIZE) + 1 <= userList.size(); buttonIndex++)
+{ %>
+    <button id="buttonpage<%=buttonIndex%>" class="pagenumberbutton" onclick="gotoPage(<%=buttonIndex%>);"><%=buttonIndex%></button>
+<% } %>
+
 </bbData:context>

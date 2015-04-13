@@ -34,6 +34,7 @@
 
 <bbUI:docTemplateHead title="OCTET User Directory">
 <link rel="stylesheet" type="text/css" href="../css/view.css">
+<link rel="stylesheet" type="text/css" href="https://blackboard.oberlin.edu/common/shared.css?v=9.1.201410.160373" id="css_3">
 <script src="../js/view.js"></script>
 <script>
 window.onload = function()
@@ -49,6 +50,7 @@ window.onload = function()
 	<bbUI:breadcrumb href="https://blackboard.oberlin.edu/">Click here to return to Blackboard</bbUI:breadcrumb>
 	<bbUI:breadcrumb>OCTET User Directory</bbUI:breadcrumb>
 </bbUI:breadcrumbBar>
+
 <bbUI:titleBar iconUrl="/images/ci/icons/user_u.gif">OCTET User Directory</bbUI:titleBar>
 
 <input id="searchterm" type="text" name="searchterm" size="40" autocomplete="on" placeholder="Enter your search here..." value="<%=searchTerm%>" autofocus/>
