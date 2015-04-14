@@ -42,6 +42,7 @@
     <!-- code permissions required for proper operation -->
     <permissions>
       <permission type="socket" name="*" actions="connect"/>
+      <permission type="java.net.NetPermission" name="setCookieHandler" />
       <permission type="persist" name="Content" actions="create,modify,delete"/>
       <permission type="attribute" name="user.authinfo" actions="get"/>
 	  <permission type="attribute" name="user.personalinfo" actions="get,set" />

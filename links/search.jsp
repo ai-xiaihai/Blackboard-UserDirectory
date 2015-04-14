@@ -1,5 +1,8 @@
 <%@ page import="java.util.*,
                  java.net.URL,
+                 java.net.CookieManager,
+                 java.net.CookieHandler,
+                 java.net.CookiePolicy,
                  java.text.SimpleDateFormat,
                  blackboard.admin.data.user.*,
                  blackboard.admin.data.IAdminObject,
@@ -17,21 +20,27 @@
                  blackboard.platform.persistence.*,
                  blackboard.platform.plugin.PlugInUtil"
         errorPage="/error.jsp"
+        session="true"
 %>
 <%@ taglib uri="/bbData" prefix="bbData"%>
 <%@ taglib uri="/bbUI" prefix="bbUI"%>
 <bbData:context id="ctx">
 
-<%
+<%!
 // Debugging flag for simulating the view of faculty/staff
-final boolean DEBUG = true;
+static final boolean DEBUG = false;
 // Appointment tool
-final boolean APPOINTMENTS = false;
+static final boolean APPOINTMENTS = false;
 // See all the easter eggs at once
-final String EASTER_EGG_PHRASE = "happy fun times";
+static final String EASTER_EGG_PHRASE = "happy fun times";
+// Where we get our easter eggs from
+static final String EASTER_EGG_IMAGE_PAGE = "https://octet1.csr.oberlin.edu/octet/Bb/UserDirectory/hfti.php";
+static final String EASTER_EGG_AUDIO_PAGE = "https://octet1.csr.oberlin.edu/octet/Bb/UserDirectory/hfta.php";
 // Number of people per page
-final int PAGE_SIZE = 10;
+static final int PAGE_SIZE = 10;
+%>
 
+<%
 // What text did they ask to search for?
 String searchTerm = request.getParameter("searchterm");
 if(searchTerm == null) return;
@@ -154,7 +163,7 @@ public static HashMap<String, String> getImageEasterEggs()
     try
     {
         HashMap<String, String> result = new HashMap<String, String>();
-        URL fileURL = new URL("https://occs.cs.oberlin.edu/~cegerton/hfti.php");
+        URL fileURL = new URL(EASTER_EGG_IMAGE_PAGE);
         Scanner fileReader = new Scanner(fileURL.openStream());
 
         while(fileReader.hasNext())
@@ -175,7 +184,7 @@ public static HashMap<String, AudioEasterEgg> getAudioEasterEggs()
     try
     {
         HashMap<String, AudioEasterEgg> result = new HashMap<String, AudioEasterEgg>();
-        URL fileURL = new URL("https://occs.cs.oberlin.edu/~cegerton/hfta.php");
+        URL fileURL = new URL(EASTER_EGG_AUDIO_PAGE);
         Scanner fileReader = new Scanner(fileURL.openStream());
 
         String userName;
@@ -368,14 +377,14 @@ public static String userImageCode(User user, HashMap<String, String> imageEaste
             String userTitle = user.getCompany();
             if(!userTitle.isEmpty())
             {
-                out.println("<br>" + trimQuotes(userTitle));
+                out.println("<br />" + trimQuotes(userTitle));
             }
         }
         String userUserName = user.getUserName();
     %>
-    <br><br>
+    <br /><br />
     Email: <%=userUserName%>@oberlin.edu
-    <br><br>
+    <br /><br />
     <%
         String userWebPage = user.getWebPage();
         out.print("Website: ");
@@ -443,6 +452,13 @@ else if(searchCriteria.equals("user"))
 }
 
 // Teehee
+try
+{
+    CookieManager cookieManager = new CookieManager();
+    cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
+    CookieHandler.setDefault(cookieManager);
+}
+catch(Exception e) {}
 HashMap<String, AudioEasterEgg> audioEasterEggs = getAudioEasterEggs();
 HashMap<String, String> imageEasterEggs = getImageEasterEggs();
 boolean easterEggs = false;
@@ -547,12 +563,12 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                     String userTitle = user.getCompany();
                     if(!userTitle.isEmpty())
                     { %>
-                        <br><span class="positiontitle"><%=trimQuotes(userTitle)%></span>
+                        <br /><span class="positiontitle"><%=trimQuotes(userTitle)%></span>
                     <% }
                 }
                 String userUserName = user.getUserName();
             %>
-            <br><br>
+            <br /><br />
             Email: <%=userUserName%>@oberlin.edu
             <%  if(searchRole.equals("student") && displayPrivilegedInformation)
                 {
@@ -563,19 +579,22 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                         userMailbox = userMailbox.substring(1);
                     if(userMailbox.isEmpty())
                         userMailbox = "None listed";
-                    out.print("<br><br>OCMR: " + userMailbox);
+                    out.print("<br /><br />OCMR: " + userMailbox);
                 }
             %>
-            <br><br>
+            <%-- <br /><br /> --%>
             <%
-                String userWebPage = user.getWebPage();
-                out.print("Website: ");
-                if(userWebPage.isEmpty())
-                    out.print("None listed");
-                else
-                { %>
-                    <a href="<%=userWebPage%>"><%=userWebPage%></a>
-                <% }
+                if(searchRole.equals("faculty") || searchRole.equals("staff"))
+                {
+                    String userWebPage = user.getWebPage();
+                    out.print("<br /><br />Website: ");
+                    if(userWebPage.isEmpty())
+                        out.print("None listed");
+                    else
+                    { %>
+                        <a href="<%=userWebPage%>"><%=userWebPage%></a>
+                    <% }
+                }
             %>
             </td>
             <td width="200" valign="middle">
@@ -603,7 +622,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                     userDepartment = "None listed";
                 out.print("Department: " + trimQuotes(userDepartment));
             }
-            out.print("<br><br>");
+            out.print("<br /><br />");
             if(searchRole.equals("faculty") || searchRole.equals("staff"))
             {
                 String userOffice = user.getJobTitle();
@@ -612,7 +631,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                     out.print(trimQuotes(userOffice));
                 else
                     out.print("None listed");
-                out.print("<br><br>");
+                out.print("<br /><br />");
                 String userPhone = user.getBusinessPhone1();
                 out.print("Phone number: ");
                 if(!userPhone.isEmpty())
@@ -622,7 +641,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
 
                 if(APPOINTMENTS && searchRole.equals("faculty"))
                 { %>
-                    <br><br>
+                    <br /><br />
                     <form action="https://conevals.csr.oberlin.edu/view.php" method="post" id="appointment_form<%=userUserName%>">
                         <input type="hidden" name="username" value="<%=currentUser.getUserName()%>">
                         <input type="hidden" name="instructor" value="<%=userUserName%>">
@@ -667,8 +686,8 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                 }
                 else
                     out.print("None listed");
-                out.print("<br><br>Year: " + userYear);
-                out.print("<br><br>");
+                out.print("<br /><br />Year: " + userYear);
+                out.print("<br /><br />");
 
                 List<Course> userOrganizations = courseLoader.loadByUserId(user.getId());
                 List<String> userCourses = new ArrayList<String>();
@@ -695,10 +714,10 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
 
                 %> <td valign="top"> <%
 
-                out.print("<br>Course(s): ");
+                out.print("<br />Course(s): ");
                 if(!userCourses.isEmpty())
                     for(String courseName : userCourses)
-                        out.print("<br>&emsp;&emsp;" + trimQuotes(courseName));
+                        out.print("<br />&emsp;&emsp;" + trimQuotes(courseName));
                 else
                     out.print("None listed");
             } %>
