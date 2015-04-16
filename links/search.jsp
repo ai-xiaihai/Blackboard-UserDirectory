@@ -570,7 +570,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
             %>
             <br /><br />
             Email: <%=userUserName%>@oberlin.edu
-            <%  if(searchRole.equals("student") && displayPrivilegedInformation)
+            <%  if(searchRole.equals("student"))
                 {
                     String userMailbox = user.getJobTitle();
                     if(userMailbox.startsWith("OCMR"))
@@ -616,8 +616,10 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
             }
             else if(searchRole.equals("faculty") || searchRole.equals("staff"))
             {
-                if(userDepartment.length() > 5 && userDepartment.substring(0, 5).equals("DEPT-"))
-                    userDepartment = userDepartment.substring(5);
+                if(userDepartment.startsWith("DEPT"))
+                    userDepartment = userDepartment.substring(4);
+                if(userDepartment.startsWith("-"))
+                    userDepartment = userDepartment.substring(1);
                 if(userDepartment.isEmpty())
                     userDepartment = "None listed";
                 out.print("Department: " + trimQuotes(userDepartment));
@@ -696,9 +698,9 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                     for(Course organization : userOrganizations)
                     {
                         String organizationTitle = organization.getTitle();
-                        if(organizationTitle.length() >= 7 && organizationTitle.substring(0, 7).equals(currentTermString + " "))
+                        if(organizationTitle.startsWith(currentTermString + " "))
                             userCourses.add(organizationTitle.substring(7));
-                        else if(organizationTitle.length() >= 11 && organizationTitle.substring(0, 11).equals("Advising - "))
+                        else if(organizationTitle.startsWith("Advising - "))
                             userAdvisors.add(organizationTitle.substring(11));
                     }
 

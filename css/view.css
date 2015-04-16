@@ -147,7 +147,8 @@ ul {
 	height: 165px;
 }
 .resultstable:hover {
-	background: #EEFFEE;
+/*	background: #EEFFEE; /*
+    background: rgba(238, 255, 238, 0.5);
 }
 .clearfloat {
 	clear: both;
@@ -172,10 +173,10 @@ ul {
 	-webkit-animation-direction: alternate;
 }
 @-webkit-keyframes loadinganimation {
-	from { color: #FFFFFF; }
-	to { color: #000000; }
+	from { opacity: 1.0; }
+	to { opacity: 0.0; }
 }
 @keyframes loadinganimation {
-	from { color: #FFFFFF; }
-	to { color: #000000; }
+	from { opacity: 1.0; }
+	to { opacity: 0.0; }
 }
