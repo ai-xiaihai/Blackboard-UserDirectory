@@ -28,7 +28,7 @@
 
 <%!
 // Debugging flag for simulating the view of faculty/staff
-static final boolean DEBUG = true;
+static final boolean DEBUG = false;
 // Appointment tool
 static final boolean APPOINTMENTS = false;
 // See all the easter eggs at once
