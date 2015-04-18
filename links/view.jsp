@@ -23,13 +23,18 @@
 
 <%	String searchTerm = request.getParameter("searchterm");
 	String searchCriteria = request.getParameter("searchcriteria");
-	String searchRole = request.getParameter("searchrole");
+	Set<String> searchRoles = new HashSet<String>();
+	String[] searchRoleNames = request.getParameterValues("searchroles");
+	if(searchRoleNames == null)
+		searchRoleNames = new String[] { "Student", "Faculty", "Staff" };
+	Collections.addAll(searchRoles, searchRoleNames);
 	boolean initialSearch = false;
-	if(searchTerm != null && searchCriteria != null && searchRole != null)
+	if(searchTerm != null && searchCriteria != null && !searchRoles.isEmpty())
 		initialSearch = true;
-	searchTerm = searchTerm == null ? "" : searchTerm;
-	searchCriteria = searchCriteria == null || searchCriteria.isEmpty() ? "user" : searchCriteria;
-	searchRole = searchRole == null || searchRole.isEmpty() ? "student" : searchRole;
+	if(searchTerm == null)
+		searchTerm = "";
+	if(searchCriteria == null || searchCriteria.isEmpty())
+		searchCriteria = "user";
 %>
 
 <bbUI:docTemplateHead title="OCTET User Directory">
@@ -57,15 +62,15 @@ window.onload = function()
 <input type="button" onclick="newSearch();" value="Search" />
 <br />
 <div class="style1">Search by:
-	<label><input id="firstname" type="radio" name="searchcriteria" value="first" <%=searchCriteria.equals("first") ? "checked" : ""%> />First Name</label>
-	<label><input id="lastname" type="radio" name="searchcriteria" value="last" <%=searchCriteria.equals("last") ? "checked" : ""%> />Last Name</label>
-	<label><input id="username" type="radio" name="searchcriteria" value="user" <%=searchCriteria.equals("user") ? "checked" : ""%> />Username</label>
+	<label><input id="firstname" type="radio" name="searchcriteria" value="first" <% if(searchCriteria.equals("first")) out.print("checked"); %> />First Name</label>
+	<label><input id="lastname" type="radio" name="searchcriteria" value="last" <% if(searchCriteria.equals("last")) out.print("checked"); %> />Last Name</label>
+	<label><input id="username" type="radio" name="searchcriteria" value="user" <% if(searchCriteria.equals("user")) out.print("checked"); %> />Username</label>
 </div>
 <div class="style1">Search for:
-	<label><input id="studentrole" type="radio" name="searchrole" value="student" <%=searchRole.equals("student") ? "checked" : ""%> />Students</label>
-	<label><input id="facultyrole" type="radio" name="searchrole" value="faculty" <%=searchRole.equals("faculty") ? "checked" : ""%> />Faculty</label>
-	<label><input id="staffrole" type="radio" name="searchrole" value="staff" <%=searchRole.equals("staff") ? "checked" : ""%> />Staff</label>
+	<label><input id="studentrole" type="checkbox" name="searchroles" value="Student" <% if(searchRoles.contains("Student")) out.print("checked"); %> />Students</label>
+	<label><input id="facultyrole" type="checkbox" name="searchroles" value="Faculty" <% if(searchRoles.contains("Faculty")) out.print("checked"); %> />Faculty</label>
+	<label><input id="staffrole" type="checkbox" name="searchroles" value="Staff" <% if(searchRoles.contains("Staff")) out.print("checked"); %> />Staff</label>
 </div>
 
-<div id="loadingsearch" class="loadingmessage">Loading...<br /></div>
+<br /><div id="loadingsearch" class="loadingmessage">Loading...<br /></div><br />
 <div id="searchresults"></div>

@@ -135,8 +135,10 @@ ul {
 	margin-right: 1.0em;
 }
 .pagenumberbutton {
-	width: 3%;
-	margin-right: 1%;
+	font-size: 0.666em;
+	width: 2%;
+	min-width: 30px;
+	margin-right: 3px;
 	margin-bottom: 3px;
 	text-align: center;
 }
@@ -147,7 +149,6 @@ ul {
 	height: 165px;
 }
 .resultstable:hover {
-/*	background: #EEFFEE; /*
     background: rgba(238, 255, 238, 0.5);
 }
 .clearfloat {

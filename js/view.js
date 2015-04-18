@@ -93,13 +93,12 @@ function getSearchData()
     else if(document.getElementById("username").checked)
         result += document.getElementById("username").value;
 
-    result += "&searchrole=";
     if(document.getElementById("studentrole").checked)
-        result += document.getElementById("studentrole").value;
-    else if(document.getElementById("facultyrole").checked)
-        result += document.getElementById("facultyrole").value;
-    else if(document.getElementById("staffrole").checked)
-        result += document.getElementById("staffrole").value;
+        result += "&searchroles=" + document.getElementById("studentrole").value;
+    if(document.getElementById("facultyrole").checked)
+        result += "&searchroles=" + document.getElementById("facultyrole").value;
+    if(document.getElementById("staffrole").checked)
+        result += "&searchroles=" + document.getElementById("staffrole").value;
 
     return result;
 }

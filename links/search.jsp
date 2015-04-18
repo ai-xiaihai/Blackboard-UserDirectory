@@ -28,7 +28,7 @@
 
 <%!
 // Debugging flag for simulating the view of faculty/staff
-static final boolean DEBUG = false;
+static final boolean DEBUG = true;
 // Appointment tool
 static final boolean APPOINTMENTS = false;
 // See all the easter eggs at once
@@ -49,9 +49,9 @@ if(searchTerm == null) return;
 String searchCriteria = request.getParameter("searchcriteria");
 if(searchCriteria == null) return;
 
-// What kind of user are they searching for--student, faculty, or staff?
-String searchRole = request.getParameter("searchrole");
-if(searchRole == null) return;
+// What kind of users are they searching for--student, faculty, and/or staff?
+String[] searchRoleNames = request.getParameterValues("searchroles");
+if(searchRoleNames == null) searchRoleNames = new String[0];
 
 // Create a persistence manager - needed if we want to use loaders or persisters in blackboard.
 BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
@@ -321,7 +321,7 @@ public static String userImageCode(User user, HashMap<String, String> imageEaste
     String userName = user.getUserName();
     String userPicture = getUserPicture(userName);
     String result = "<td width=" + doubleQuote("110") + " valign=" + doubleQuote("middle") + ">\n";
-    result += "\t<img src=" + doubleQuote(userPicture) + " width=" + doubleQuote("100") + " onerror=" + doubleQuote("imageError(this)");
+    result += "\t<img src=" + doubleQuote(userPicture) + " width=" + doubleQuote("100") + " onerror=" + doubleQuote("imageError(this);");
     String imageEasterEgg = imageEasterEggs.get(userName);
     AudioEasterEgg audioEasterEgg = audioEasterEggs.get(userName);
     if(imageEasterEgg != null && audioEasterEgg != null)
@@ -363,7 +363,7 @@ public static String userImageCode(User user, HashMap<String, String> imageEaste
     <%
         out.println(user.getFamilyName() + ", ");
         String userFirstName = user.getGivenName();
-        if(!displayPrivilegedInformation && searchRole.equals("student") && userFirstName.contains("("))
+        if(!displayPrivilegedInformation && userPortalRoleId.equals(studentPortalRole.getId()) && userFirstName.contains("("))
         {
             out.print(userFirstName.substring(0, userFirstName.indexOf('(') - 1));
         }
@@ -412,13 +412,15 @@ String month = calendar.get(Calendar.MONTH) <= 6 ? "02" : "09";
 String currentTermString = year + month;
 
 // Which portal roles does the user want to see?
-Id validPortalRoleId = null;
-if(searchRole.equals("student"))
-    validPortalRoleId = studentPortalRole.getId();
-else if(searchRole.equals("faculty"))
-    validPortalRoleId = facultyPortalRole.getId();
-else if(searchRole.equals("staff"))
-    validPortalRoleId = staffPortalRole.getId();
+Set<Id> searchRoles = new HashSet<Id>();
+for(String searchRoleName : searchRoleNames)
+{
+    PortalRole searchRole = getPortalRoleByName(portalRoles, searchRoleName);
+    if(searchRole != null)
+        searchRoles.add(searchRole.getId());
+    else
+        out.println("<div>Failed to load portal role for " + searchRoleName + "</div>");
+}
 
 // We want a list of unique entries, sorted by how closely they resemble the search term.
 TreeSet<User> userSet = null;
@@ -466,7 +468,7 @@ boolean easterEggs = false;
 if(userSet.isEmpty() && searchTerm.equalsIgnoreCase(EASTER_EGG_PHRASE))
 {
     // This will find more than one kind of user; best to keep things simple and display the least information.
-    searchRole = "student";
+    // searchRole = "student";
     displayPrivilegedInformation = false;
     easterEggs = true;
     Set<String> easterEggNames = new HashSet<String>();
@@ -489,7 +491,7 @@ for(User user : userSet)
         // Find out what kind of user (student, faculty, administrator, etc.) they are.
         Id userPortalRoleId = portalRoleLoader.loadPrimaryRoleByUserId(user.getId()).getId();
         // Skip them if they aren't what the user has asked for.
-        if(easterEggs || userPortalRoleId.equals(validPortalRoleId))
+        if(easterEggs || searchRoles.contains(userPortalRoleId))
         {
             // Unless a member of faculty/staff is performing the search, filter out
             // name matches based on legal names instead of preferred names.
@@ -514,18 +516,7 @@ for(User user : userSet)
     }
 } %>
 
-<span class="style7">
-<% out.print(userList.size());
-if(easterEggs)
-    out.print(" user(s)");
-else if(searchRole.equals("student"))
-    out.print(" student(s)");
-else if(searchRole.equals("faculty"))
-    out.print(" faculty");
-else if(searchRole.equals("staff"))
-    out.print(" staff");
-%> located.
-</span>
+<span class="style7"><%=userList.size()%> user(s) located.</span>
 <span class="pagenumber">
     <button id="prevpagebutton" onclick="prevPage();" class="pagedirectionbutton" disabled>Prev</button>
     <span class="style7">Page <span id="currentpage">1</span> of <%=(userList.size() / PAGE_SIZE) + 1%></span>
@@ -545,20 +536,22 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
     <% for(int userIndex = pageIndex * PAGE_SIZE; userIndex < (pageIndex + 1) * PAGE_SIZE && userIndex < userList.size(); userIndex++)
     {
         User user = userList.get(userIndex);
+        Id userPortalRoleId = portalRoleLoader.loadPrimaryRoleByUserId(user.getId()).getId();
         %>
         <table class="resultstable"><tr>
+            <td width="30"></td>
             <%=userImageCode(user, imageEasterEggs, audioEasterEggs)%>
-            <td width="200" valign="middle">
+            <td width="250" valign="middle">
             <span class="userfullname">
             <%
                 out.print(user.getFamilyName() + ", ");
                 String userFirstName = user.getGivenName();
-                if(!displayPrivilegedInformation && searchRole.equals("student"))
+                if(!displayPrivilegedInformation && userPortalRoleId.equals(studentPortalRole.getId()))
                     out.print(getPreferredName(userFirstName));
                 else
                     out.print(userFirstName);
             %></span>
-            <%	if(searchRole.equals("faculty") || searchRole.equals("staff"))
+            <%	if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId()))
                 {
                     String userTitle = user.getCompany();
                     if(!userTitle.isEmpty())
@@ -570,7 +563,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
             %>
             <br /><br />
             Email: <%=userUserName%>@oberlin.edu
-            <%  if(searchRole.equals("student"))
+            <%  if(userPortalRoleId.equals(studentPortalRole.getId()))
                 {
                     String userMailbox = user.getJobTitle();
                     if(userMailbox.startsWith("OCMR"))
@@ -581,10 +574,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                         userMailbox = "None listed";
                     out.print("<br /><br />OCMR: " + userMailbox);
                 }
-            %>
-            <%-- <br /><br /> --%>
-            <%
-                if(searchRole.equals("faculty") || searchRole.equals("staff"))
+                else if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId()))
                 {
                     String userWebPage = user.getWebPage();
                     out.print("<br /><br />Website: ");
@@ -597,11 +587,11 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                 }
             %>
             </td>
-            <td width="200" valign="middle">
+            <td width="250" valign="middle">
             <% String userDepartment = user.getDepartment();
             // If the user is a student, this should be their major.
             // If not, it should be their department.
-            if(searchRole.equals("student") && displayPrivilegedInformation)
+            if(userPortalRoleId.equals(studentPortalRole.getId()) && displayPrivilegedInformation)
             {
                 if(!userDepartment.isEmpty())
                 {
@@ -614,7 +604,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                     userDepartment = "None listed";
                 out.print("Major(s): " + trimQuotes(userDepartment));
             }
-            else if(searchRole.equals("faculty") || searchRole.equals("staff"))
+            else if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId()))
             {
                 if(userDepartment.startsWith("DEPT"))
                     userDepartment = userDepartment.substring(4);
@@ -625,7 +615,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                 out.print("Department: " + trimQuotes(userDepartment));
             }
             out.print("<br /><br />");
-            if(searchRole.equals("faculty") || searchRole.equals("staff"))
+            if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId()))
             {
                 String userOffice = user.getJobTitle();
                 out.print("Office location: ");
@@ -641,7 +631,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                 else
                     out.print("None listed");
 
-                if(APPOINTMENTS && searchRole.equals("faculty"))
+                if(APPOINTMENTS && userPortalRoleId.equals(facultyPortalRole.getId()))
                 { %>
                     <br /><br />
                     <form action="https://conevals.csr.oberlin.edu/view.php" method="post" id="appointment_form<%=userUserName%>">
@@ -655,75 +645,85 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                         <a href="javascript:{}" onclick="document.getElementById('appointment_form<%=userUserName%>').submit();">Click here</a> to schedule an appointment with this instructor.
                     </form>
                 <% }
+                %> </td><td width="250"> <%
             }
-            else if(searchRole.equals("student") && displayPrivilegedInformation)
+            else if(userPortalRoleId.equals(studentPortalRole.getId()))
             {
-                String userDean = user.getStudentId();
-                String userYear = "None listed";
-                out.print("Class dean: ");
-                if(userDean.length() >= 3)
+                if(displayPrivilegedInformation)
                 {
-                    out.print(userDean.substring(3));
-                    switch(userDean.substring(0, 2))
+                    String userDean = user.getStudentId();
+                    String userYear = "None listed";
+                    out.print("Class dean: ");
+                    if(userDean.length() >= 3)
                     {
-                        case "FR":
-                            userYear = "Freshman";
-                            break;
-                        case "SO":
-                            userYear = "Sophomore";
-                            break;
-                        case "JR":
-                            userYear = "Junior";
-                            break;
-                        case "SR":
-                            userYear = "Senior";
-                            break;
-                        case "5Y":
-                            userYear = "Fifth year";
-                            break;
-                        default:
-                            userYear = userDean.substring(0, 2);
-                            break;
+                        out.print(userDean.substring(3));
+                        switch(userDean.substring(0, 2))
+                        {
+                            case "FR":
+                                userYear = "Freshman";
+                                break;
+                            case "SO":
+                                userYear = "Sophomore";
+                                break;
+                            case "JR":
+                                userYear = "Junior";
+                                break;
+                            case "SR":
+                                userYear = "Senior";
+                                break;
+                            case "5Y":
+                                userYear = "Fifth year";
+                                break;
+                            default:
+                                userYear = userDean.substring(0, 2);
+                                break;
+                        }
                     }
+                    else
+                        out.print("None listed");
+                    out.print("<br /><br />Year: " + userYear);
+                    out.print("<br /><br />");
+
+                    List<Course> userOrganizations = courseLoader.loadByUserId(user.getId());
+                    List<String> userCourses = new ArrayList<String>();
+                    List<String> userAdvisors = new ArrayList<String>();
+                    if(!userOrganizations.isEmpty())
+                        for(Course organization : userOrganizations)
+                        {
+                            String organizationTitle = organization.getTitle();
+                            if(organizationTitle.startsWith(currentTermString + " "))
+                                userCourses.add(organizationTitle.substring(7));
+                            else if(organizationTitle.startsWith("Advising - "))
+                                userAdvisors.add(organizationTitle.substring(11));
+                        }
+
+                    out.print("Advisor(s): ");
+                    if(!userAdvisors.isEmpty())
+                    {
+                        for(int i = 0; i < userAdvisors.size() - 1; i++)
+                            out.print(trimQuotes(userAdvisors.get(i)) + ", ");
+                        out.print(trimQuotes(userAdvisors.get(userAdvisors.size() - 1)));
+                    }
+                    else
+                        out.print("None listed");
+                    %>
+
+                    </td><td width="250" valign="top">
+
+                    <%  out.print("<br />Course(s): ");
+                    if(!userCourses.isEmpty())
+                        for(String courseName : userCourses)
+                            out.print("<br />&emsp;&emsp;" + trimQuotes(courseName));
+                    else
+                        out.print("None listed");
                 }
                 else
-                    out.print("None listed");
-                out.print("<br /><br />Year: " + userYear);
-                out.print("<br /><br />");
-
-                List<Course> userOrganizations = courseLoader.loadByUserId(user.getId());
-                List<String> userCourses = new ArrayList<String>();
-                List<String> userAdvisors = new ArrayList<String>();
-                if(!userOrganizations.isEmpty())
-                    for(Course organization : userOrganizations)
-                    {
-                        String organizationTitle = organization.getTitle();
-                        if(organizationTitle.startsWith(currentTermString + " "))
-                            userCourses.add(organizationTitle.substring(7));
-                        else if(organizationTitle.startsWith("Advising - "))
-                            userAdvisors.add(organizationTitle.substring(11));
-                    }
-
-                out.print("Advisor(s): ");
-                if(!userAdvisors.isEmpty())
-                {
-                    for(int i = 0; i < userAdvisors.size() - 1; i++)
-                        out.print(trimQuotes(userAdvisors.get(i)) + ", ");
-                    out.print(trimQuotes(userAdvisors.get(userAdvisors.size() - 1)));
-                }
-                else
-                    out.print("None listed");
-
-                %> <td valign="top"> <%
-
-                out.print("<br />Course(s): ");
-                if(!userCourses.isEmpty())
-                    for(String courseName : userCourses)
-                        out.print("<br />&emsp;&emsp;" + trimQuotes(courseName));
-                else
-                    out.print("None listed");
+                { %>
+                    </td><td width="250">
+                <% }
             } %>
             </td>
+            <td width="15"></td>
         </tr></table>
     <% } %>
     </div>
