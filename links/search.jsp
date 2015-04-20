@@ -519,7 +519,7 @@ for(User user : userSet)
 <span class="style7"><%=userList.size()%> user(s) located.</span>
 <span class="pagenumber">
     <button id="prevpagebutton" onclick="prevPage();" class="pagedirectionbutton" disabled>Prev</button>
-    <span class="style7">Page <span id="currentpage">1</span> of <%=(userList.size() / PAGE_SIZE) + 1%></span>
+    <span class="style7">Page <span id="currentpage">1</span> of <%=userList.isEmpty() ? 1 : ((userList.size() - 1) / PAGE_SIZE) + 1%></span>
     <button id="nextpagebutton" onclick="nextPage();" class="pagedirectionbutton">Next</button>
 </span>
 <br /><br />
