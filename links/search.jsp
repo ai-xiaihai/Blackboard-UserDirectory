@@ -468,8 +468,6 @@ boolean easterEggs = false;
 if(userSet.isEmpty() && searchTerm.equalsIgnoreCase(EASTER_EGG_PHRASE))
 {
     // This will find more than one kind of user; best to keep things simple and display the least information.
-    // searchRole = "student";
-    displayPrivilegedInformation = false;
     easterEggs = true;
     Set<String> easterEggNames = new HashSet<String>();
     easterEggNames.addAll(imageEasterEggs.keySet());
@@ -562,7 +560,7 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                 String userUserName = user.getUserName();
             %>
             <br /><br />
-            Email: <%=userUserName%>@oberlin.edu
+            <span class="fieldtitle">Email: </span><%=userUserName%>@oberlin.edu
             <%  if(userPortalRoleId.equals(studentPortalRole.getId()))
                 {
                     String userMailbox = user.getJobTitle();
@@ -572,12 +570,13 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                         userMailbox = userMailbox.substring(1);
                     if(userMailbox.isEmpty())
                         userMailbox = "None listed";
-                    out.print("<br /><br />OCMR: " + userMailbox);
-                }
+                    %>
+                    <br /><br /><span class="fieldtitle">OCMR: </span> <%=userMailbox%>
+                <% }
                 else if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId()))
                 {
                     String userWebPage = user.getWebPage();
-                    out.print("<br /><br />Website: ");
+                    %><br /><br /><span class="fieldtitle">Website: </span><%
                     if(userWebPage.isEmpty())
                         out.print("None listed");
                     else
@@ -602,8 +601,9 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                 }
                 else
                     userDepartment = "None listed";
-                out.print("Major(s): " + trimQuotes(userDepartment));
-            }
+                %>
+                <span class="fieldtitle">Major(s): </span> <%=trimQuotes(userDepartment)%>
+            <% }
             else if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId()))
             {
                 if(userDepartment.startsWith("DEPT"))
@@ -612,20 +612,25 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                     userDepartment = userDepartment.substring(1);
                 if(userDepartment.isEmpty())
                     userDepartment = "None listed";
-                out.print("Department: " + trimQuotes(userDepartment));
-            }
+                %>
+                <span class="fieldtitle">Department: </span> <%=trimQuotes(userDepartment)%>
+            <% }
             out.print("<br /><br />");
             if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId()))
             {
                 String userOffice = user.getJobTitle();
-                out.print("Office location: ");
+                %>
+                <span class="fieldtitle">Office location: </span>
+                <%
                 if(!userOffice.isEmpty())
                     out.print(trimQuotes(userOffice));
                 else
                     out.print("None listed");
                 out.print("<br /><br />");
                 String userPhone = user.getBusinessPhone1();
-                out.print("Phone number: ");
+                %>
+                <span class="fieldtitle">Phone number: </span>
+                <%
                 if(!userPhone.isEmpty())
                     out.print(trimQuotes(userPhone));
                 else
@@ -653,7 +658,9 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                 {
                     String userDean = user.getStudentId();
                     String userYear = "None listed";
-                    out.print("Class dean: ");
+                    %>
+                    <span class="fieldtitle">Class dean: </span>
+                    <%
                     if(userDean.length() >= 3)
                     {
                         out.print(userDean.substring(3));
@@ -681,9 +688,10 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                     }
                     else
                         out.print("None listed");
-                    out.print("<br /><br />Year: " + userYear);
-                    out.print("<br /><br />");
-
+                    %>
+                    <br /><br /><span class="fieldtitle">Year: </span> <%=userYear%>
+                    <br /><br />
+                    <%
                     List<Course> userOrganizations = courseLoader.loadByUserId(user.getId());
                     List<String> userCourses = new ArrayList<String>();
                     List<String> userAdvisors = new ArrayList<String>();
@@ -697,7 +705,9 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                                 userAdvisors.add(organizationTitle.substring(11));
                         }
 
-                    out.print("Advisor(s): ");
+                    %>
+                    <span class="fieldtitle">Advisor(s): </span>
+                    <%
                     if(!userAdvisors.isEmpty())
                     {
                         for(int i = 0; i < userAdvisors.size() - 1; i++)
@@ -709,8 +719,9 @@ for(int pageIndex = 0; pageIndex * PAGE_SIZE < userList.size(); pageIndex++)
                     %>
 
                     </td><td width="250" valign="top">
+                    <br /><span class="fieldtitle">Course(s): </span>
 
-                    <%  out.print("<br />Course(s): ");
+                    <%
                     if(!userCourses.isEmpty())
                         for(String courseName : userCourses)
                             out.print("<br />&emsp;&emsp;" + trimQuotes(courseName));

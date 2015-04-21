@@ -75,13 +75,18 @@ ul {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 14px;
 	font-weight: bold;
-	color: #222222;
+	color: #000000;
 }
 .positiontitle {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 11px;
 	font-weight: bold;
 	color: #888888;
+}
+.fieldtitle {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	color: #444444;
 }
 .li_nav {
 	line-height: 20px;
