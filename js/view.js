@@ -65,16 +65,16 @@ function searchUpdate()
 {
     if(xmlhttp.status == 404)
     {
-        document.getElementById("loadingsearch").style.display = "none";
+        document.getElementById("loadingmessage").style.display = "none";
         alert("Something went wrong! We couldn't communicate with our server. Please let the OCTET office know if this was unexpected.");
     }
     else if(xmlhttp.readyState < 4)
     {
-        document.getElementById("loadingsearch").style.display = "inline";
+        document.getElementById("loadingmessage").style.display = "inline";
     }
     else
     {
-        document.getElementById("loadingsearch").style.display = "none";
+        document.getElementById("loadingmessage").style.display = "none";
         document.getElementById("searchresults").innerHTML = xmlhttp.responseText;
         gotoPage(1);
     }

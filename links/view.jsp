@@ -15,7 +15,7 @@
                  blackboard.platform.*,
                  blackboard.platform.persistence.*,
 				 blackboard.platform.plugin.PlugInUtil"
-        errorPage="/error.jsp"
+         errorPage="/error.jsp"
 %>
 
 <%@ taglib uri="/bbData" prefix="bbData"%>
@@ -63,14 +63,15 @@ window.onload = function()
 <br />
 <div class="style1">Search by:
 	<label><input id="firstname" type="radio" name="searchcriteria" value="first" <% if(searchCriteria.equals("first")) out.print("checked"); %> />First Name</label>
-	<label><input id="lastname" type="radio" name="searchcriteria" value="last" <% if(searchCriteria.equals("last")) out.print("checked"); %> />Last Name</label>
-	<label><input id="username" type="radio" name="searchcriteria" value="user" <% if(searchCriteria.equals("user")) out.print("checked"); %> />Username</label>
+	<label><input id="lastname"  type="radio" name="searchcriteria" value="last"  <% if(searchCriteria.equals("last"))  out.print("checked"); %> />Last Name</label>
+	<label><input id="username"  type="radio" name="searchcriteria" value="user"  <% if(searchCriteria.equals("user"))  out.print("checked"); %> />Username</label>
 </div>
 <div class="style1">Search for:
 	<label><input id="studentrole" type="checkbox" name="searchroles" value="Student" <% if(searchRoles.contains("Student")) out.print("checked"); %> />Students</label>
 	<label><input id="facultyrole" type="checkbox" name="searchroles" value="Faculty" <% if(searchRoles.contains("Faculty")) out.print("checked"); %> />Faculty</label>
-	<label><input id="staffrole" type="checkbox" name="searchroles" value="Staff" <% if(searchRoles.contains("Staff")) out.print("checked"); %> />Staff</label>
+	<label><input id="staffrole"   type="checkbox" name="searchroles" value="Staff"   <% if(searchRoles.contains("Staff"))   out.print("checked"); %> />Staff</label>
 </div>
-
-<br /><div id="loadingsearch" class="loadingmessage">Loading...<br /></div><br />
+<br />
+<div id="loadingmessage">Loading...<br /></div>
+<br />
 <div id="searchresults"></div>
