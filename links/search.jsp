@@ -39,7 +39,7 @@ static final int PAGE_SIZE = 10;
 // Should we show them potentially sensitive information?
 static boolean displayPrivilegedInformation = false;
 
-// Various portal roles that are useful
+// Relevant portal roles
 static PortalRole studentPortalRole;
 static PortalRole facultyPortalRole;
 static PortalRole staffPortalRole;
@@ -122,7 +122,7 @@ public static PortalRole getPortalRoleByName(Iterable<PortalRole> portalRoles, S
     return null;
 }
 
-// Take in some string, and remove leading and trailing double-quote characters.
+// Take in some string, and remove leading and trailing single- and double-quote characters.
 public static String trimQuotes(String string)
 {
     int begin = 0;
@@ -137,14 +137,6 @@ public static String trimQuotes(String string)
     else
         return string.substring(begin);
 }
-
-// Take in some string, surround it with double quotes, and return it.
-// Useful for improving readability with html attributes.
-public static String doubleQuote(String string) { return "\"" + string + "\""; }
-
-// Take in some string, surround it with single quotes, and return it.
-// Useful for improving readability with JS code.
-public static String singleQuote(String string) { return "'" + string + "'"; }
 
 // Marginally better than hard-coding.
 public static String getUserPicture(String userName)
@@ -228,12 +220,12 @@ public static class AudioEasterEgg
 
     public String getAnchorCode()
     {
-        String result = "<audio id=" + doubleQuote(username + "_audio") + " preload=" + doubleQuote("auto");
+        String result = "<audio id=\"" + username + "_audio\" preload=\"auto\"";
         if(loop)
             result += " loop";
-        result += " >\n";
-        result += "\t<source src=" + doubleQuote(filename + ".mp3") + " type=" + doubleQuote("audio/mpeg") + " />\n";
-        result += "\t<source src=" + doubleQuote(filename + ".ogg") + " type=" + doubleQuote("audio/ogg") + " />\n";
+        result += " >";
+        result += "<source src=\"" + filename + ".mp3\" type=\"audio/mpeg\" />";
+        result += "<source src=\"" + filename + ".ogg\" type=\"audio/ogg\" />";
         result += "</audio>";
         return result;
     }
@@ -317,10 +309,11 @@ private static class UserNameComparator extends NameComparator
 
 public static String imageEasterEggCode(String imageEasterEgg)
 {
-    String result = "<div class=" + doubleQuote("preload") + ">\n";
-    result += "\t<img src=" + doubleQuote(imageEasterEgg) + " />\n";
-    result += "</div>";
-    return result;
+    StringBuilder result = new StringBuilder();
+    result.append("<div class=\"preload\"><img src=\"");
+    result.append(imageEasterEgg);
+    result.append("\" /></div>");
+    return result.toString();
 }
 
 // The body of the <bbUI:list> tag became rather messy. The next function(s) should help mitigate that.
@@ -627,15 +620,16 @@ for(User user : userLoader.loadByUserSearch(userSearch))
         if(searchRoles.contains(userPortalRoleId))
         {
             // Unless a member of faculty/staff is performing the search, filter out
-            // name matches based on legal names instead of preferred names.
-            if(searchCriteria.equals("first") &&
-               !displayPrivilegedInformation &&
+            // student name matches based on legal names instead of preferred names.
+            if(!displayPrivilegedInformation &&
+                searchCriteria.equals("first") &&
+                userPortalRoleId.equals(studentPortalRole.getId()) &&
                !getPreferredName(user.getGivenName()).toLowerCase().contains(searchTerm.toLowerCase()))
             {
                 continue;
             }
             // Add the user to our set.
-            userSet.add(userLoader.loadById(user.getId()));
+            userSet.add(user);
 
             // Create the hidden audio elements for anyone who gets one.
             AudioEasterEgg audioEasterEgg = audioEasterEggs.get(userName);
