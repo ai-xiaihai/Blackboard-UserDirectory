@@ -27,8 +27,6 @@
 <bbData:context id="ctx">
 
 <%!
-// Appointment tool
-static final boolean APPOINTMENTS = false;
 // See all the easter eggs at once
 static final String EASTER_EGG_PHRASE = "happy fun times";
 // Where we get our easter eggs from
@@ -36,9 +34,9 @@ static final String EASTER_EGG_IMAGE_PAGE = "https://octet1.csr.oberlin.edu/octe
 static final String EASTER_EGG_AUDIO_PAGE = "https://octet1.csr.oberlin.edu/octet/Bb/UserDirectory/hfta.php";
 // Number of people per page
 static final int PAGE_SIZE = 10;
-// Should we show them potentially sensitive information?
-static boolean displayPrivilegedInformation = false;
 
+// Should we show them potentially sensitive information?
+static boolean displayPrivilegedInformation;
 // Relevant portal roles
 static PortalRole studentPortalRole;
 static PortalRole facultyPortalRole;
@@ -50,6 +48,8 @@ static PortalRole guestPortalRole;
 %>
 
 <%
+displayPrivilegedInformation = false;
+
 // What text did they ask to search for?
 String searchTerm = request.getParameter("searchterm");
 if(searchTerm == null) return;
@@ -83,6 +83,8 @@ alumniPortalRole = getPortalRoleByName(portalRoles, "Alumni");
 nonObiePortalRole = getPortalRoleByName(portalRoles, "Non Obie");
 // Find the guest portal role.
 guestPortalRole = getPortalRoleByName(portalRoles, "Guest");
+
+// displayPrivilegedInformation = false;
 
 // Find out who the user is.
 User currentUser = ctx.getUser();
@@ -380,14 +382,15 @@ public static String userFirstColumnCode(User user, Id userPortalRoleId)
     StringBuilder result = new StringBuilder();
 
     result.append("<span class=\"userfullname\">");
-	String userLastName = user.getFamilyName();
-	String userFirstName = displayPrivilegedInformation || !userPortalRoleId.equals(studentPortalRole.getId()) ? user.getGivenName() : getPreferredName(user.getGivenName());
+    String userLastName = user.getFamilyName();
+    String userFirstName = (displayPrivilegedInformation || !userPortalRoleId.equals(studentPortalRole.getId())) ? user.getGivenName() : getPreferredName(user.getGivenName());
     result.append(userLastName);
     result.append(", ");
     result.append(userFirstName);
     result.append("</span><br />");
 
-    if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId())) {
+    if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId()))
+    {
         String userTitle = trimQuotes(user.getCompany());
         if(!userTitle.isEmpty())
         {
@@ -482,7 +485,7 @@ public static String userSecondColumnCode(User user, Id userPortalRoleId, List<S
         result.append("<br /><br />");
 
         result.append("<span class=\"fieldtitle\">Advisor(s): </span>");
-        if(!userAdvisors.isEmpty())
+        if(userAdvisors != null && !userAdvisors.isEmpty())
         {
             for(int i = 0; i < userAdvisors.size() - 1; i++)
             {
@@ -529,7 +532,7 @@ String userThirdColumnCode(User user, Id userPortalRoleId, List<String> userCour
     if(displayPrivilegedInformation && userPortalRoleId.equals(studentPortalRole.getId()))
     {
         result.append("<br /><span class=\"fieldtitle\">Course(s): </span>");
-        if(!userCourses.isEmpty())
+        if(userCourses != null && !userCourses.isEmpty())
             for(String courseName : userCourses)
             {
                 result.append("<br />&emsp;&emsp;");
@@ -628,8 +631,9 @@ for(User user : userLoader.loadByUserSearch(userSearch))
             {
                 continue;
             }
-            // Add the user to our set.
-            userSet.add(user);
+            // Add the user to our set. Complexity is neccessary, since some users
+            // do not load fully otherwise.
+            userSet.add(userLoader.loadById(user.getId()));
 
             // Create the hidden audio elements for anyone who gets one.
             AudioEasterEgg audioEasterEgg = audioEasterEggs.get(userName);
@@ -689,12 +693,13 @@ for(int pageIndex = 0; userIterator.hasNext(); pageIndex++)
         List<Course> userOrganizations = null;
         List<String> userCourses = null;
         List<String> userAdvisors = null;
-        if(userPortalRoleId.equals(studentPortalRole.getId()))
+        if(displayPrivilegedInformation && userPortalRoleId.equals(studentPortalRole.getId()))
         {
             userOrganizations = courseLoader.loadByUserId(user.getId());
-            userCourses = new ArrayList<String>();
-            userAdvisors = new ArrayList<String>();
             if(!userOrganizations.isEmpty())
+            {
+                userCourses = new ArrayList<String>();
+                userAdvisors = new ArrayList<String>();
                 for(Course organization : userOrganizations)
                 {
                     String organizationTitle = organization.getTitle();
@@ -703,6 +708,7 @@ for(int pageIndex = 0; userIterator.hasNext(); pageIndex++)
                     else if(organizationTitle.startsWith("Advising - "))
                         userAdvisors.add(organizationTitle.substring(11));
                 }
+            }
         }
         %>
         <table class="resultstable">
