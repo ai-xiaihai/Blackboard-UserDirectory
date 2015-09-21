@@ -4,6 +4,7 @@
                  java.net.CookieHandler,
                  java.net.CookiePolicy,
                  java.text.SimpleDateFormat,
+                 java.io.PrintWriter,
                  blackboard.admin.data.user.*,
                  blackboard.admin.data.IAdminObject,
                  blackboard.admin.persist.user.*,
@@ -30,8 +31,8 @@
 // See all the easter eggs at once
 static final String EASTER_EGG_PHRASE = "happy fun times";
 // Where we get our easter eggs from
-static final String EASTER_EGG_IMAGE_PAGE = "https://octet1.csr.oberlin.edu/octet/Bb/UserDirectory/hfti.php";
-static final String EASTER_EGG_AUDIO_PAGE = "https://octet1.csr.oberlin.edu/octet/Bb/UserDirectory/hfta.php";
+static final String EASTER_EGG_IMAGE_PAGE = "http://octet1.csr.oberlin.edu/octet/Bb/UserDirectory/hfti.php";
+static final String EASTER_EGG_AUDIO_PAGE = "http://octet1.csr.oberlin.edu/octet/Bb/UserDirectory/hfta.php";
 // Number of people per page
 static final int PAGE_SIZE = 10;
 
@@ -48,6 +49,17 @@ static PortalRole guestPortalRole;
 %>
 
 <%
+try
+{
+    System.setProperty("jsse.enableSNIExtension", "false");
+}
+catch(Exception e)
+{
+    out.println("<!-- EXCEPTION ENCOUNTERED WHILE TRYING TO DISABLE SNI EXTENSION");
+    e.printStackTrace(new PrintWriter(out));
+    out.println(" -->");
+}
+
 displayPrivilegedInformation = false;
 
 // What text did they ask to search for?
@@ -160,49 +172,35 @@ public static String getPreferredName(String firstName)
 /* For the lulz. */
 
 // Mappings are username : image URL.
-public static HashMap<String, String> getImageEasterEggs()
+public static HashMap<String, String> getImageEasterEggs() throws Exception
 {
-    try
-    {
-        HashMap<String, String> result = new HashMap<String, String>();
-        URL fileURL = new URL(EASTER_EGG_IMAGE_PAGE);
-        Scanner fileReader = new Scanner(fileURL.openStream());
+    HashMap<String, String> result = new HashMap<String, String>();
+    URL fileURL = new URL(EASTER_EGG_IMAGE_PAGE);
+    Scanner fileReader = new Scanner(fileURL.openStream());
 
-        while(fileReader.hasNext())
-            result.put(fileReader.next(), fileReader.next());
+    while(fileReader.hasNext())
+        result.put(fileReader.next(), fileReader.next());
 
-        fileReader.close();
-        return result;
-    }
-    catch(Exception e)
-    {
-        return new HashMap<String, String>();
-    }
+    fileReader.close();
+    return result;
 }
 
 // Mappings are username : audio easter egg
-public static HashMap<String, AudioEasterEgg> getAudioEasterEggs()
+public static HashMap<String, AudioEasterEgg> getAudioEasterEggs() throws Exception
 {
-    try
-    {
-        HashMap<String, AudioEasterEgg> result = new HashMap<String, AudioEasterEgg>();
-        URL fileURL = new URL(EASTER_EGG_AUDIO_PAGE);
-        Scanner fileReader = new Scanner(fileURL.openStream());
+    HashMap<String, AudioEasterEgg> result = new HashMap<String, AudioEasterEgg>();
+    URL fileURL = new URL(EASTER_EGG_AUDIO_PAGE);
+    Scanner fileReader = new Scanner(fileURL.openStream());
 
-        String userName;
-        while(fileReader.hasNext())
-        {
-            userName = fileReader.next();
-            result.put(userName, new AudioEasterEgg(userName, fileReader.next(), fileReader.nextBoolean(), fileReader.nextBoolean()));
-        }
-
-        fileReader.close();
-        return result;
-    }
-    catch(Exception e)
+    String userName;
+    while(fileReader.hasNext())
     {
-        return new HashMap<String, AudioEasterEgg>();
+        userName = fileReader.next();
+        result.put(userName, new AudioEasterEgg(userName, fileReader.next(), fileReader.nextBoolean(), fileReader.nextBoolean()));
     }
+
+    fileReader.close();
+    return result;
 }
 
 public static class AudioEasterEgg
@@ -578,8 +576,9 @@ TreeSet<User> userSet = null;
 UserSearch userSearch = new UserSearch();
 // Don't show disabled users.
 userSearch.setOnlyShowEnabled(true);
-// Instantiate the set of users with the appropriate comparator, set up the parameters
-// for the search, and then load users based on the search into our set.
+
+// Instantiate the set of users with the appropriate comparator and set up the
+// parameters for the search
 if(searchCriteria.equals("first"))
 {
     userSet = new TreeSet(new FirstNameComparator(searchTerm, displayPrivilegedInformation));
@@ -606,9 +605,37 @@ try
     cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
     CookieHandler.setDefault(cookieManager);
 }
-catch(Exception e) {}
-HashMap<String, AudioEasterEgg> audioEasterEggs = getAudioEasterEggs();
-HashMap<String, String> imageEasterEggs = getImageEasterEggs();
+catch(Exception e)
+{
+    out.println("<!-- EXCEPTION ENCOUNTERED WHILE SETTING COOKIE POLICY");
+    e.printStackTrace(new PrintWriter(out));
+    out.println(" -->");
+}
+
+HashMap<String, AudioEasterEgg> audioEasterEggs = null;
+HashMap<String, String> imageEasterEggs = null;
+try
+{
+    audioEasterEggs = getAudioEasterEggs();
+}
+catch(Exception e)
+{
+    out.println("<!-- EXCEPTION ENCOUNTERED WHILE ACQUIRING AUDIO EASTER EGGS");
+    e.printStackTrace(new PrintWriter(out));
+    out.println(" -->");
+    audioEasterEggs = new HashMap<String, AudioEasterEgg>();
+}
+try
+{
+    imageEasterEggs = getImageEasterEggs();
+}
+catch(Exception e)
+{
+    out.println("<!-- EXCEPTION ENCOUNTERED WHILE ACQUIRING IMAGE EASTER EGGS");
+    e.printStackTrace(new PrintWriter(out));
+    out.println(" -->");
+    imageEasterEggs = new HashMap<String, String>();
+}
 
 // Iterate over every user we've found.
 for(User user : userLoader.loadByUserSearch(userSearch))
@@ -632,7 +659,8 @@ for(User user : userLoader.loadByUserSearch(userSearch))
                 continue;
             }
             // Add the user to our set. Complexity is neccessary, since some users
-            // do not load fully otherwise.
+            // do not load fully otherwise and userSearch.setPublicInfoOnly(false)
+            // doesn't work.
             userSet.add(userLoader.loadById(user.getId()));
 
             // Create the hidden audio elements for anyone who gets one.
