@@ -681,11 +681,15 @@ if(userSet.isEmpty() && searchTerm.equalsIgnoreCase(EASTER_EGG_PHRASE))
     easterEggNames.addAll(audioEasterEggs.keySet());
     for(String userName : easterEggNames)
     {
-        userSet.add(userLoader.loadByUserName(userName));
-        AudioEasterEgg audioEasterEgg = audioEasterEggs.get(userName);
-        if(audioEasterEgg != null) out.print(audioEasterEgg.getAnchorCode());
-        String imageEasterEgg = imageEasterEggs.get(userName);
-        if(imageEasterEgg != null) out.print(imageEasterEggCode(imageEasterEgg));
+        try
+        {
+            userSet.add(userLoader.loadByUserName(userName));
+            AudioEasterEgg audioEasterEgg = audioEasterEggs.get(userName);
+            if(audioEasterEgg != null) out.print(audioEasterEgg.getAnchorCode());
+            String imageEasterEgg = imageEasterEggs.get(userName);
+            if(imageEasterEgg != null) out.print(imageEasterEggCode(imageEasterEgg));
+        }
+        catch(Exception e) {}
     }
 }
 %>
