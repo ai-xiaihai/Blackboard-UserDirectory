@@ -448,7 +448,7 @@ public static String userSecondColumnCode(User user, Id userPortalRoleId, List<S
 
         result.append("<span class=\"fieldtitle\">Class dean: </span>");
         // Format should be something like "FR-Donaldson"
-        String userDean = user.getStudentId();
+        String userDean = user.getOtherName();
         String userYear = "None listed";
         if(userDean.length() >= 3)
         {
