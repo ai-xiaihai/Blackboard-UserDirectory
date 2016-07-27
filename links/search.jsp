@@ -110,8 +110,7 @@ if(!ctx.getSession().isAuthenticated() ||
     return;
 }
 // If they are a member of faculty or staff, we show them more.
-else if(currentUserPortalRoleId.equals(facultyPortalRole.getId()) ||
-        currentUserPortalRoleId.equals(staffPortalRole.getId()))
+else if(currentUserPortalRoleId.equals(facultyPortalRole.getId()))
 {
     displayPrivilegedInformation = true;
 }
@@ -119,7 +118,8 @@ else if(currentUserPortalRoleId.equals(facultyPortalRole.getId()) ||
 else if(!(currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
           currentUserPortalRoleId.equals(emeritiPortalRole.getId()) ||
           currentUserPortalRoleId.equals(alumniPortalRole.getId())  ||
-          currentUserPortalRoleId.equals(nonObiePortalRole.getId())))
+          currentUserPortalRoleId.equals(nonObiePortalRole.getId()) ||
+        currentUserPortalRoleId.equals(staffPortalRole.getId())))
 {
     out.print("<div>In order to use this tool, you must be a student, alumnus, staff member, emeritus, or faculty member.</div>");
     return;
