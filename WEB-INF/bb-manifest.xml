@@ -5,9 +5,9 @@
     <name value= "OCTET User Directory"/>
     <handle value= "octetusrdir"/>
     <description value= "Search for users on Blackboard."/>
-    <version value= "2.1.1.0"/>
+    <version value= "3000.1.1-rel.6+6024978"/>
     <requires>
-    	<bbversion value="9.1.0"/>
+    	<bbversion value="3000.1.1-rel.6+6024978"/>
     </requires>
     <vendor>
       <id value="octt"/>
