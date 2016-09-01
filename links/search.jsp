@@ -96,8 +96,6 @@ nonObiePortalRole = getPortalRoleByName(portalRoles, "Non Obie");
 // Find the guest portal role.
 guestPortalRole = getPortalRoleByName(portalRoles, "Guest");
 
-// displayPrivilegedInformation = false;
-
 // Find out who the user is.
 User currentUser = ctx.getUser();
 // Find the current user's portal role.
@@ -109,14 +107,14 @@ if(!ctx.getSession().isAuthenticated() ||
     out.print("<div>You must be logged in to use this tool.</div>");
     return;
 }
-// If they are a member of faculty or staff, we show them more.
-else if(currentUserPortalRoleId.equals(facultyPortalRole.getId()) ||
-        currentUserPortalRoleId.equals(staffPortalRole.getId()))
+// If they are a member of faculty, we show them more.
+else if(currentUserPortalRoleId.equals(facultyPortalRole.getId()))
 {
     displayPrivilegedInformation = true;
 }
 // If they are not a student, alumnus, or faculty/emeriti, block access.
-else if(!(currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
+else if(!(currentUserPortalRoleId.equals(staffPortalRole.getId())   ||
+          currentUserPortalRoleId.equals(studentPortalRole.getId()) ||
           currentUserPortalRoleId.equals(emeritiPortalRole.getId()) ||
           currentUserPortalRoleId.equals(alumniPortalRole.getId())  ||
           currentUserPortalRoleId.equals(nonObiePortalRole.getId())))
