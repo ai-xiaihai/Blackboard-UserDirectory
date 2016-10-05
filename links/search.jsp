@@ -159,7 +159,7 @@ public static String getUserPicture(String userName)
 // If the user has a preferred name, their first (given) name will be in the format
 // "preferred (given)".
 // Take in some first name, and if there is a preferred and given name in there,
-// return only the preferred name. If there is not, return the name unchanged.
+// return only the preferred name. If there is not, return the name unchanged
 public static String getPreferredName(String firstName)
 {
     int parenthesisIndex = firstName.indexOf('(');
@@ -527,15 +527,58 @@ String userThirdColumnCode(User user, Id userPortalRoleId, List<String> userCour
     StringBuilder result = new StringBuilder();
     if(displayPrivilegedInformation && userPortalRoleId.equals(studentPortalRole.getId()))
     {
-        result.append("<br /><span class=\"fieldtitle\">Course(s): </span>");
-        if(userCourses != null && !userCourses.isEmpty())
+        result.append("<span class=\"fieldtitle\">Course(s): </span>");
+        if(userCourses != null && !userCourses.isEmpty()) {
             for(String courseName : userCourses)
             {
                 result.append("<br />&emsp;&emsp;");
                 result.append(trimQuotes(courseName));
             }
-        else
-            result.append("None listed");
+        }
+    }
+
+
+    //if faculty searches for faculty, display address info
+    if(displayPrivilegedInformation && userPortalRoleId.equals(facultyPortalRole.getId()))
+    {
+        user.setShowAddressInfo(true); //activate user show address info flag
+        String street1 = user.getStreet1();
+        String street2 = user.getStreet2();
+        String city = user.getCity();
+        String state = user.getState();
+        String zip = user.getZipCode();
+        //append each to result with proper formatting
+        result.append("<span class=\"fieldtitle\">Home Address: </span><br />");
+        
+        if(!street1.isEmpty()){
+            result.append(street1);
+            result.append("<br />");
+        }
+        
+        if(!street2.isEmpty()){
+            result.append(street2);
+            result.append("<br />");
+        }
+
+        if(!city.isEmpty() && !state.isEmpty()){
+            if(city.isEmpty()){
+                city = "Unlisted City";
+            }
+            if(state.isEmpty()){
+                state = "Unlisted State";
+            }
+            result.append(city + ", " + state);
+            result.append("<br />");
+        } 
+
+        if(!zip.isEmpty()){
+            result.append(zip);
+        }
+
+        result.append("<br />");
+
+        user.setShowAddressInfo(false); //deactivate user show address info flag
+    
     }
     return result.toString();
 }
@@ -744,10 +787,14 @@ for(int pageIndex = 0; userIterator.hasNext(); pageIndex++)
         <table class="resultstable">
             <tr>
                 <td width="30"></td>
-                <td width="110" valign="middle"><%=userImageCode(user, imageEasterEggs, audioEasterEggs)%></td>
+                <!-- <td width="110" valign="middle"><%=userImageCode(user, imageEasterEggs, audioEasterEggs)%></td>
                 <td width="250" valign="middle"><%=userFirstColumnCode(user, userPortalRoleId)%></td>
                 <td width="250" valign="middle"><%=userSecondColumnCode(user, userPortalRoleId, userAdvisors)%></td>
-                <td width="250" valign="top"><%=userThirdColumnCode(user, userPortalRoleId, userCourses)%></td>
+                <td width="250" valign="top"><%=userThirdColumnCode(user, userPortalRoleId, userCourses)%></td> -->
+                <td width="110" style="vertical-align:top"><%=userImageCode(user, imageEasterEggs, audioEasterEggs)%></td>
+                <td width="250" style="vertical-align:top"><%=userFirstColumnCode(user, userPortalRoleId)%></td>
+                <td width="250" style="vertical-align:top"><%=userSecondColumnCode(user, userPortalRoleId, userAdvisors)%></td>
+                <td width="250" style="vertical-align:top"><%=userThirdColumnCode(user, userPortalRoleId, userCourses)%></td>
                 <td width="30"></td>
             </tr>
         </table>
