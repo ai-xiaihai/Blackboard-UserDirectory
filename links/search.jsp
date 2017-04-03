@@ -421,19 +421,6 @@ if(userPortalRoleId.equals(studentPortalRole.getId()))
 }
 else if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId()))
 {
-    //comment out website link
-    //result.append("<span class=\"fieldtitle\">Website: </span>");
-    //String userWebPage = user.getWebPage();
-    //if(userWebPage.isEmpty())
-    //    result.append("None listed");
-    //else
-    //{
-    //    result.append("<a href=\"");
-    //    result.append(userWebPage);
-    //    result.append("\">");
-    //    result.append(userWebPage);
-    //    result.append("</a>");
-    //}
 
     // doing appointment link, open in a new page
     // Note: this is for oberlin-test
@@ -462,7 +449,8 @@ else if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.e
     if (has_appts){
         result.append("<a href=");
         // change needed next line !!!
-        result.append("https://oberlintest.blackboard.com/webapps/octt-octetsign-bb_bb60/links/appointments.jsp?uid=");
+
+        result.append("https://blackboard.oberlin.edu/webapps/octt-octetsign-BBLEARN/links/appointments.jsp?uid=");
         result.append(user.getUserName());
         result.append(" target=\"_blank\"");
         result.append(">sign up</a>");
