@@ -421,6 +421,7 @@ if(userPortalRoleId.equals(studentPortalRole.getId()))
 }
 else if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.equals(staffPortalRole.getId()))
 {
+
     // doing appointment link, open in a new page
     // Note: this is for oberlin-test
     result.append("<span class=\"fieldtitle\">Appointment: </span>");
@@ -448,6 +449,7 @@ else if(userPortalRoleId.equals(facultyPortalRole.getId()) || userPortalRoleId.e
     if (has_appts){
         result.append("<a href=");
         // change needed next line !!!
+
         result.append("https://blackboard.oberlin.edu/webapps/octt-octetsign-BBLEARN/links/appointments.jsp?uid=");
         result.append(user.getUserName());
         result.append(" target=\"_blank\"");
